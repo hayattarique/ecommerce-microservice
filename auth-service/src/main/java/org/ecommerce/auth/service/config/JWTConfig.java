@@ -10,6 +10,8 @@ import org.ecommerce.utility.util.ApiResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -36,6 +38,11 @@ public class JWTConfig {
     @Bean
     JWTFilter jwtFilter(JWTService jwtService,PermissionProvider permissionProvider) {
         return new JWTFilter(jwtService,permissionProvider);
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
 
