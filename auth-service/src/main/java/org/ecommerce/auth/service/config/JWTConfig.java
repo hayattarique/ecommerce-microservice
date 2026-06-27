@@ -40,10 +40,5 @@ public class JWTConfig {
         return new JWTFilter(jwtService,permissionProvider);
     }
 
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
 
 }
