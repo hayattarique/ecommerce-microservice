@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-@EqualsAndHashCode(exclude = "refreshTokens")
+@EqualsAndHashCode(exclude = "refreshTokens", callSuper = false)
 @Entity
 @Data
 @Table(name = "user_credentials")

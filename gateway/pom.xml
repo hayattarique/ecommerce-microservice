@@ -15,7 +15,7 @@
     </parent>
 
     <groupId>org.ecommerce.gateway</groupId>
-    <artifactId>ecommerce-gateway</artifactId>
+    <artifactId>gateway</artifactId>
     <name>ecommerce-gateway</name>
     <description>API Gateway for Ecommerce Microservices</description>
 

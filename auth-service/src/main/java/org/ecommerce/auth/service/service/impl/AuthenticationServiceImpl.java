@@ -32,7 +32,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     //----------- DEPENDENCIES ---------------------------------------------------
     private final UserCredentialRepository credentialRepository;
-    private final RefreshTokenRepository tokenRepository;
     private final UserDetailsService userDetailsService;
     private final HttpServletRequest httpServletRequest;
     private final PasswordEncoder passwordEncoder;
