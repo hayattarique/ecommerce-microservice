@@ -23,7 +23,12 @@ public class UserCredentialEntity extends BaseEntity {
     @OneToMany(mappedBy = "userCredential", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RefreshTokenEntity> refreshTokens;
 
-    @PrePersist
+    public void addRefreshToken(RefreshTokenEntity refreshTokenEntity) {
+        refreshTokens.add(refreshTokenEntity);
+        refreshTokenEntity.setUserCredential(this);
+    }
+
+    @PreUpdate
     public void prePersist() {
         lastLoginAt = LocalDateTime.now();
     }

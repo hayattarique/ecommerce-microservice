@@ -11,16 +11,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class JwtConfig {
-    private final UserRoleRepository userRoleRepository;
 
     @Bean
-    PermissionProvider permissionProvider() {
-        return userRoleRepository::findAllPermissionByEmail;
-    }
-
-    @Bean
-    JWTFilter jwtFilter(PermissionProvider permissionProvider, JWTService jwtService) {
-        return new JWTFilter(jwtService, permissionProvider);
+    JWTFilter jwtFilter(JWTService jwtService) {
+        return new JWTFilter(jwtService);
     }
 
 }

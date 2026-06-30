@@ -1,9 +1,6 @@
 package org.ecommerce.utility.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import org.jspecify.annotations.NullMarked;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,27 +9,50 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Builder
-@Setter
 @Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthUserDetails implements UserDetails {
 
+    private Long userId;
+
     private String email;
+
     private String password;
-    private boolean enabled;
-    private List<String> roles;
+
+    @Builder.Default
+    private boolean enabled = true;
+
+    @Builder.Default
+    private boolean accountNonExpired = true;
+
+    @Builder.Default
+    private boolean accountNonLocked = true;
+
+    @Builder.Default
+    private boolean credentialsNonExpired = true;
+
+    @Builder.Default
+    private List<String> roles = new ArrayList<>();
+
+    @Builder.Default
+    private List<String> permissions = new ArrayList<>();
 
     @Override
-    @NullMarked
     public Collection<? extends GrantedAuthority> getAuthorities() {
+
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        if (roles != null) {
-            roles.stream()
-                    .map(role -> "ROLE_" + role)
-                    .map(SimpleGrantedAuthority::new)
-                    .forEach(authorities::add);
-        }
+        // Roles
+        roles.forEach(role ->
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
+
+        // Permissions
+        permissions.forEach(permission ->
+                authorities.add(new SimpleGrantedAuthority(permission)));
+
         return authorities;
     }
 
@@ -46,9 +66,23 @@ public class AuthUserDetails implements UserDetails {
         return password;
     }
 
-
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return accountNonExpired;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return accountNonLocked;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return credentialsNonExpired;
     }
 }

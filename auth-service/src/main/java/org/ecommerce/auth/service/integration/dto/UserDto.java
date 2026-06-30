@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,4 +20,6 @@ public class UserDto {
     private String mobile;
     private Boolean active;
     private LocalDate dateOfBirth;
-   }
+    private List<String> roles;
+    private List<String> permissions;
+}

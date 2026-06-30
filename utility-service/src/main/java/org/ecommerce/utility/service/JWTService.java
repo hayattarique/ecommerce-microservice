@@ -1,31 +1,39 @@
 package org.ecommerce.utility.service;
 
 import io.jsonwebtoken.Claims;
+import org.ecommerce.utility.model.AuthUserDetails;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 public interface JWTService {
 
-    String extractUsername(String token);
 
-    <T> T extractClaim(String token, Function<Claims, T> claimsResolver);
+        String generateAccessToken(AuthUserDetails userDetails);
 
-    String generateToken(UserDetails userDetails);
+        String generateRefreshToken(AuthUserDetails userDetails);
 
-    String generateToken(Map<String, Object> extraClaims, UserDetails userDetails);
+        String extractUsername(String token);
 
-    String generateRefreshToken(UserDetails userDetails);
+        Long extractUserId(String token);
 
-    String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration);
+        String extractEmail(String token);
 
+        List<String> extractRoles(String token);
 
-    boolean isTokenExpired(String token);
+        List<String> extractPermissions(String token);
 
-    List<String> extractRole(String token);
+        String extractTokenType(String token);
 
-    boolean validateToken(String token);
+        Date extractExpiration(String token);
+
+        boolean validateToken(String token);
+
+        boolean isRefreshToken(String token);
+
+        boolean isAccessToken(String token);
 
 }

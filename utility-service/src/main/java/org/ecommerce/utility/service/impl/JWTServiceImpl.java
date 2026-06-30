@@ -6,8 +6,8 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.ecommerce.utility.config.JWTPropertiesConfig;
+import org.ecommerce.utility.model.AuthUserDetails;
 import org.ecommerce.utility.service.JWTService;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.crypto.SecretKey;
 import java.util.*;
@@ -19,73 +19,102 @@ public class JWTServiceImpl implements JWTService {
     private final JWTPropertiesConfig jwtProperties;
 
     @Override
+    public String generateAccessToken(AuthUserDetails userDetails) {
+
+        Map<String, Object> claims = new HashMap<>();
+
+        claims.put("userId", userDetails.getUserId());
+        claims.put("email", userDetails.getEmail());
+        claims.put("roles", userDetails.getRoles());
+        claims.put("permissions", userDetails.getPermissions());
+        claims.put("type", "access");
+
+        return buildToken(
+                claims,
+                userDetails.getUsername(),
+                jwtProperties.getExpiration()
+        );
+    }
+
+    @Override
+    public String generateRefreshToken(AuthUserDetails userDetails) {
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh");
+
+        return buildToken(
+                claims,
+                userDetails.getUsername(),
+                jwtProperties.getRefreshExpiration()
+        );
+    }
+
+    private String buildToken(
+            Map<String, Object> claims,
+            String username,
+            long expiration) {
+
+        return Jwts.builder()
+                .claims(claims)
+                .subject(username)
+                .issuer("ecommerce-auth-service")
+                .id(UUID.randomUUID().toString())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    @Override
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
     @Override
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claim = extractAllClaims(token);
-        return claimsResolver.apply(claim);
-
+    public Long extractUserId(String token) {
+        return extractAllClaims(token).get("userId", Long.class);
     }
 
     @Override
-    public String generateToken(UserDetails userDetails) {
-
-        Map<String, Object> claims = new HashMap<>();
-
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(auth -> Objects.requireNonNull(auth.getAuthority()).replace("ROLE_", ""))
-                .toList();
-        claims.put("roles", roles);
-
-        return buildToken(claims, userDetails, jwtProperties.getExpiration());
+    public String extractEmail(String token) {
+        return extractAllClaims(token).get("email", String.class);
     }
 
     @Override
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return buildToken(extraClaims, userDetails, jwtProperties.getExpiration());
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        List<?> roles = extractAllClaims(token).get("roles", List.class);
+        return roles == null
+                ? Collections.emptyList()
+                : roles.stream().map(Object::toString).toList();
     }
 
     @Override
-    public String generateRefreshToken(UserDetails userDetails) {
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("type", "refresh");
-
-        return buildToken(claims, userDetails, jwtProperties.getRefreshExpiration());
+    public List<String> extractPermissions(String token) {
+        List<?> permissions = extractAllClaims(token).get("permissions", List.class);
+        return permissions == null
+                ? Collections.emptyList()
+                : permissions.stream().map(Object::toString).toList();
     }
 
     @Override
-    public String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
-        return Jwts.builder().claims(extraClaims).subject(userDetails.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis())).expiration(new Date(System.currentTimeMillis() + expiration)).signWith(getSignInKey()).compact();
-    }
-
-
-    @Override
-    public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+    public String extractTokenType(String token) {
+        return extractAllClaims(token).get("type", String.class);
     }
 
     @Override
-    public List<String> extractRole(String token) {
-        return  extractAllClaims(token).get("role", List.class);
-    }
-
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser().verifyWith(getSignInKey()).build().parseSignedClaims(token).getPayload();
-    }
-
-    private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretKey());
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    @Override
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(extractTokenType(token));
+    }
+
+    @Override
+    public boolean isAccessToken(String token) {
+        return "access".equals(extractTokenType(token));
     }
 
     @Override
@@ -93,8 +122,30 @@ public class JWTServiceImpl implements JWTService {
         try {
             Claims claims = extractAllClaims(token);
             return claims.getExpiration().after(new Date());
-        } catch (Exception e) {
+        } catch (Exception ex) {
             return false;
         }
+    }
+
+    @Override
+    public <T> T extractClaim(String token,
+                              Function<Claims, T> claimsResolver) {
+        return claimsResolver.apply(extractAllClaims(token));
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    private SecretKey getSigningKey() {
+
+        byte[] keyBytes =
+                Decoders.BASE64.decode(jwtProperties.getSecretKey());
+
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

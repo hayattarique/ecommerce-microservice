@@ -10,15 +10,14 @@ import org.ecommerce.auth.service.entity.RefreshTokenEntity;
 import org.ecommerce.auth.service.entity.UserCredentialEntity;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
 import org.ecommerce.auth.service.integration.dto.UserDto;
-import org.ecommerce.auth.service.repositories.RefreshTokenRepository;
 import org.ecommerce.auth.service.repositories.UserCredentialRepository;
 import org.ecommerce.auth.service.service.AuthenticationService;
 import org.ecommerce.utility.model.AuthUserDetails;
 import org.ecommerce.utility.service.JWTService;
 import org.jspecify.annotations.NonNull;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +31,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     //----------- DEPENDENCIES ---------------------------------------------------
     private final UserCredentialRepository credentialRepository;
-    private final UserDetailsService userDetailsService;
-    private final HttpServletRequest httpServletRequest;
+    private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final UserAdapter userAdapter;
     private final JWTService jwtService;
@@ -80,30 +78,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        UserDto user = userAdapter.getUserByEmail(request.getEmail());
-        AuthUserDetails userDetails = (AuthUserDetails) userDetailsService.loadUserByUsername(request.getEmail());
-        if (user == null) {
-            log.error("User not found for email: {}", request.getEmail());
-            throw new UsernameNotFoundException("User not found for email: " + request.getEmail());
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        if (authenticate.getPrincipal() instanceof AuthUserDetails authenticationDetails) {
+            String accessToken = jwtService.generateAccessToken(authenticationDetails);
+            String refreshToken = jwtService.generateRefreshToken(authenticationDetails);
+            UserCredentialEntity credentialEntity = credentialRepository.findByUserAccountIdAndActiveIsTrue(authenticationDetails.getUserId())
+                    .orElseThrow(() -> new IllegalStateException("User credentials not found"));
+            RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
+            refreshTokenEntity.setToken(refreshToken);
+            refreshTokenEntity.setExpiredAt(LocalDateTime.now().plusDays(30)); // Set expiration date for refresh token
+            credentialEntity.addRefreshToken(refreshTokenEntity);
+            credentialRepository.save(credentialEntity);
+            return new AuthenticationResponse(accessToken, refreshToken);
         }
-        UserCredentialEntity entity = credentialRepository.findByUserAccountIdAndActiveIsTrue(user.getUserAccountId())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found for email: " + request.getEmail()));
-        boolean isValid = passwordEncoder.matches(request.getPassword(), entity.getPassword());
-        if (!isValid) {
-            throw new BadCredentialsException("Invalid credentials");
-        }
-        String token = jwtService.generateToken(userDetails);
-        String refreshToken = jwtService.generateRefreshToken(userDetails);
-        String ipAddress = getIpAddress(httpServletRequest);
-        entity.setLastLoginIpAddress(ipAddress);
-        RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-        refreshTokenEntity.setToken(refreshToken);
-        refreshTokenEntity.setExpiredAt(LocalDateTime.now().plusDays(7));
-        refreshTokenEntity.setActive(true);
-        refreshTokenEntity.setUserCredential(entity);
-        entity.getRefreshTokens().add(refreshTokenEntity);
-        credentialRepository.save(entity);
-        return new AuthenticationResponse(token, refreshToken);
+
+
+        return null;
     }
 
     /**

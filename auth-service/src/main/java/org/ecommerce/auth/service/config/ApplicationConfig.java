@@ -32,7 +32,14 @@ public class ApplicationConfig {
             UserDto userDto = userAdapter.getUserByEmail(email);
             UserCredentialEntity userCredential = userCredentialRepository.findByUserAccountIdAndActiveIsTrue(userDto.getUserAccountId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            return AuthUserDetails.builder().email(email).password(userCredential.getPassword()).build();
+            return AuthUserDetails.builder().email(email)
+                    .userId(userDto.getUserAccountId())
+                    .email(userDto.getEmail())
+                    .enabled(userCredential.isActive())
+                    .password(userCredential.getPassword())
+                    .roles(userDto.getRoles())
+                    .permissions(userDto.getPermissions())
+                    .build();
         };
     }
 

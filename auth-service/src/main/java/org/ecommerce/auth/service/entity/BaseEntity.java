@@ -34,7 +34,7 @@ public abstract class BaseEntity {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    private boolean active;
+    private boolean active=true;
 
     @Version
     private Long version;
