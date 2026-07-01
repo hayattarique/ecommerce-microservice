@@ -9,5 +9,5 @@ public interface UserService {
 
     UserDto getUserByEmail(String email);
 
-    UserDto assignRoleToUser(Long id, RoleDto roleDto);
+    String assignRoleToUser(Long id, RoleDto roleDto);
 }

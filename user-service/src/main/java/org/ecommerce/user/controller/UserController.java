@@ -35,10 +35,10 @@ public class UserController {
     }
 
     @PutMapping(UserMappingConstant.ASSIGN_ROLE_BY_ID)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<ApiResponse<Object>> assignRole(@PathVariable Long id, @RequestBody RoleDto role) {
         log.info("Received request to assign role {} to user with ID {}", role.getName(), id);
-        UserDto userDto = userService.assignRoleToUser(id, role);
-        return ResponseEntity.ok(ApiResponse.success(userDto, "Role assigned successfully"));
+        return ResponseEntity.ok(ApiResponse.success(userService.assignRoleToUser(id, role), "Role assigned successfully"));
     }
 
 }

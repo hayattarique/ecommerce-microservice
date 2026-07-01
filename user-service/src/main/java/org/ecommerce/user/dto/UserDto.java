@@ -27,6 +27,6 @@ public class UserDto {
     private String gender;
     private String mobile;
     private LocalDate dateOfBirth;
-    private Set<RoleDto> roles;
+    private Set<String> roles;
 
    }

@@ -15,6 +15,7 @@ import org.ecommerce.user.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,7 +46,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserByEmail(String email) {
         UserEntity userEntity = userRepository.findByEmail(email).orElseThrow();
         List<RoleEntity> listOfRoles = userRoleRepository.findAllRolesByUserId(userEntity.getId());
-        Set<RoleDto> roles = listOfRoles.stream().map(roleMapper::toDto).collect(Collectors.toSet());
+        Set<String> roles = listOfRoles.stream().map(RoleEntity::getName).collect(Collectors.toSet());
         UserDto dto = userMapper.toDto(userEntity);
         dto.setRoles(roles);
         dto.setUserAccountId(userEntity.getId());
@@ -54,20 +55,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDto assignRoleToUser(Long id, RoleDto roleDto) {
+    public String assignRoleToUser(Long id, RoleDto roleDto) {
         UserEntity userEntity = userRepository.findById(id).orElseThrow();
         RoleEntity roleEntity = roleRepository.findById(roleDto.getId()).orElseThrow();
 
-        if (!userRoleRepository.existByUserIdAndRoleId(userEntity.getId(), roleEntity.getId())) {
-            UserRoleEntity userRoleEntity = new UserRoleEntity();
-            userRoleEntity.setRole(roleEntity);
-            userRoleEntity.setUser(userEntity);
-            userRoleRepository.save(userRoleEntity);
+        if (userRoleRepository.existByUserIdAndRoleId(userEntity.getId(), roleEntity.getId())) {
+            throw new RuntimeException("Role " + roleEntity.getName() + " is already assigned to user " + userEntity.getEmail());
         }
-
-        UserDto user = userMapper.toDto(userEntity);
-        RoleDto role = roleMapper.toDto(roleEntity);
-        user.getRoles().add(role);
-        return user;
+        UserRoleEntity userRoleEntity = new UserRoleEntity();
+        userRoleEntity.setRole(roleEntity);
+        userRoleEntity.setUser(userEntity);
+        userRoleRepository.save(userRoleEntity);
+        return "Role " + roleEntity.getName() + " assigned to user " + userEntity.getEmail();
     }
 }
