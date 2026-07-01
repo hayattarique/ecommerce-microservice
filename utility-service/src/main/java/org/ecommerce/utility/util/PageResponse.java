@@ -1,5 +1,6 @@
 package org.ecommerce.utility.util;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Getter
 @Builder
+@AllArgsConstructor
 public class PageResponse<T> {
 
     private List<T> content;
@@ -20,6 +22,15 @@ public class PageResponse<T> {
 
     public static <T> PageResponse<T> success(List<T> content, int page, int size, long totalElements, int totalPages) {
         return new  PageResponse<T>(content, page, size, totalElements, totalPages, LocalDateTime.now());
+    }
+
+    public PageResponse(List<T> content, int page, int size, long totalElements, int totalPages) {
+        this.content = content;
+        this.page = page;
+        this.size = size;
+        this.totalElements = totalElements;
+        this.totalPages = totalPages;
+        this.timestamp = LocalDateTime.now();
     }
 
 

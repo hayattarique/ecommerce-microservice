@@ -36,4 +36,6 @@ public interface JWTService {
 
         boolean isAccessToken(String token);
 
+        <T> T extractClaim(String token,
+                           Function<Claims, T> claimsResolver);
 }

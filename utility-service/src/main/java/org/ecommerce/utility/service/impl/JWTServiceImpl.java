@@ -57,8 +57,6 @@ public class JWTServiceImpl implements JWTService {
         return Jwts.builder()
                 .claims(claims)
                 .subject(username)
-                .issuer("ecommerce-auth-service")
-                .id(UUID.randomUUID().toString())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())

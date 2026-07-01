@@ -4,13 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.ecommerce.user.dto.RoleDto;
 import org.ecommerce.user.service.RoleService;
 import org.ecommerce.utility.constants.ApiMessages;
+import org.ecommerce.utility.constants.PageConstant;
 import org.ecommerce.utility.constants.RoleMappingConstant;
 import org.ecommerce.utility.util.ApiResponse;
+import org.ecommerce.utility.util.PageResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(RoleMappingConstant.BASE_URL)
@@ -21,5 +23,19 @@ public class RoleController {
     @PostMapping(RoleMappingConstant.ADD_ROLE)
     public ResponseEntity<ApiResponse<Object>> addRole(@RequestBody RoleDto role) {
         return ResponseEntity.ok(ApiResponse.success(roleService.addRole(role), ApiMessages.OPERATION_SUCCESSFUL));
+    }
+
+
+    @GetMapping(RoleMappingConstant.GET_ALL_ROLES_BY_PAGINATED)
+    public ResponseEntity<PageResponse<RoleDto>> getAllRolesPaginated(
+            @RequestParam(defaultValue = PageConstant.DEFAULT_PAGE_NUMBER) int page,
+            @RequestParam(defaultValue = PageConstant.DEFAULT_PAGE_SIZE) int size,
+            @RequestParam(defaultValue = PageConstant.DEFAULT_SORT_BY) String sortBy,
+            @RequestParam(defaultValue = PageConstant.DEFAULT_SORT_DIRECTION) String dir) {
+
+        Pageable pageable =PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(dir), sortBy));
+        PageResponse<RoleDto> pageResponse = roleService.getRoles(pageable);
+
+        return ResponseEntity.ok(pageResponse);
     }
 }

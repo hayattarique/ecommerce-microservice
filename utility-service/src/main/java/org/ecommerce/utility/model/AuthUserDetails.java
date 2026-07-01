@@ -46,12 +46,15 @@ public class AuthUserDetails implements UserDetails {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
         // Roles
-        roles.forEach(role ->
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
-
+        if (roles != null && !roles.isEmpty()) {
+            roles.forEach(role ->
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
+        }
         // Permissions
-        permissions.forEach(permission ->
-                authorities.add(new SimpleGrantedAuthority(permission)));
+        if (permissions != null && !permissions.isEmpty()) {
+            permissions.forEach(permission ->
+                    authorities.add(new SimpleGrantedAuthority(permission)));
+        }
 
         return authorities;
     }

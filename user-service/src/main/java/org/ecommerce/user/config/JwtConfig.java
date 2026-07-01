@@ -1,8 +1,6 @@
 package org.ecommerce.user.config;
 
 import lombok.RequiredArgsConstructor;
-import org.ecommerce.user.repositories.UserRoleRepository;
-import org.ecommerce.utility.config.PermissionProvider;
 import org.ecommerce.utility.filter.JWTFilter;
 import org.ecommerce.utility.service.JWTService;
 import org.springframework.context.annotation.Bean;

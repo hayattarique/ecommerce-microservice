@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "refresh_tokens")
 @Data
-public class RefreshTokenEntity extends BaseEntity{
-    @Column(unique = true)
+public class RefreshTokenEntity extends BaseEntity {
+    @Column(length = 4096, unique = true, nullable = false)
     private String token;
     private LocalDateTime expiredAt;
     @ManyToOne(optional = false)
