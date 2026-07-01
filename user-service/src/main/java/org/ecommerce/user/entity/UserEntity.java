@@ -27,4 +27,5 @@ public class UserEntity extends BaseEntity {
     private LocalDate dateOfBirth;
     @OneToMany(mappedBy = "user")
     private Set<UserRoleEntity> roles;
+
 }

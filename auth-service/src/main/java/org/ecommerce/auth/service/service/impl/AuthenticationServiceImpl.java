@@ -10,6 +10,7 @@ import org.ecommerce.auth.service.entity.RefreshTokenEntity;
 import org.ecommerce.auth.service.entity.UserCredentialEntity;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
 import org.ecommerce.auth.service.integration.dto.UserDto;
+import org.ecommerce.auth.service.repositories.RefreshTokenRepository;
 import org.ecommerce.auth.service.repositories.UserCredentialRepository;
 import org.ecommerce.auth.service.service.AuthenticationService;
 import org.ecommerce.utility.model.AuthUserDetails;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +37,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final UserAdapter userAdapter;
     private final JWTService jwtService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     @Transactional
@@ -81,18 +84,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         if (authenticate.getPrincipal() instanceof AuthUserDetails authenticationDetails) {
             String accessToken = jwtService.generateAccessToken(authenticationDetails);
-            String refreshToken = jwtService.generateRefreshToken(authenticationDetails);
             UserCredentialEntity credentialEntity = credentialRepository.findByUserAccountIdAndActiveIsTrue(authenticationDetails.getUserId())
                     .orElseThrow(() -> new IllegalStateException("User credentials not found"));
-            RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
-            refreshTokenEntity.setToken(refreshToken);
-            refreshTokenEntity.setExpiredAt(LocalDateTime.now().plusDays(30)); // Set expiration date for refresh token
-            credentialEntity.addRefreshToken(refreshTokenEntity);
-            credentialRepository.save(credentialEntity);
-            return new AuthenticationResponse(accessToken, refreshToken);
+            Optional<RefreshTokenEntity> refreshTokenEntity =
+                    refreshTokenRepository.findByUserAccountIdAndExpiredAtAfter(authenticationDetails.getUserId(), LocalDateTime.now());
+            if (refreshTokenEntity.isEmpty()) {
+                String refreshToken = jwtService.generateRefreshToken(authenticationDetails);
+                RefreshTokenEntity refreshTokenEntity1 = new RefreshTokenEntity();
+                refreshTokenEntity1.setUserAccountId(authenticationDetails.getUserId());
+                refreshTokenEntity1.setToken(refreshToken);
+                refreshTokenEntity1.setExpiredAt(LocalDateTime.now().plusDays(30)); // Set expiration date for refresh token
+                credentialEntity.addRefreshToken(refreshTokenEntity1);
+                credentialRepository.save(credentialEntity);
+                return new AuthenticationResponse(accessToken, refreshToken);
+            }
+            return new AuthenticationResponse(accessToken, refreshTokenEntity.get().getToken());
+
         }
-
-
         return null;
     }
 

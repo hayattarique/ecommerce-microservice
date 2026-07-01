@@ -11,9 +11,10 @@ import java.time.LocalDateTime;
 @Table(name = "refresh_tokens")
 @Data
 public class RefreshTokenEntity extends BaseEntity {
-    @Column(length = 4096, unique = true, nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String token;
     private LocalDateTime expiredAt;
+    private Long userAccountId;
     @ManyToOne(optional = false)
     @JoinColumn(name = "credential_id")
     private UserCredentialEntity userCredential;

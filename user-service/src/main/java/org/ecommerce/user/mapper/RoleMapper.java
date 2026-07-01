@@ -9,5 +9,5 @@ public interface RoleMapper {
 
     RoleEntity toEntity(RoleDto roleDto);
 
-    RoleDto toDto(RoleEntity roleEntity);
+     RoleDto toDto(RoleEntity roleEntity);
 }

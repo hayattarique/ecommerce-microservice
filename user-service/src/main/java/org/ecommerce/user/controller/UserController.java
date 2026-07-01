@@ -3,11 +3,13 @@ package org.ecommerce.user.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ecommerce.user.dto.RoleDto;
 import org.ecommerce.user.dto.UserDto;
 import org.ecommerce.user.service.UserService;
 import org.ecommerce.utility.constants.UserMappingConstant;
 import org.ecommerce.utility.util.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,11 +27,18 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(userDto, "User registered successfully"));
 
     }
+
     @GetMapping(UserMappingConstant.GET_USER_BY_EMAIL)
     public ResponseEntity<ApiResponse<Object>> login(@PathVariable String email) {
         log.info("Received login request for user: {}", email);
         return ResponseEntity.ok(ApiResponse.success(userService.getUserByEmail(email), "User retrieved successfully"));
     }
 
+    @PutMapping(UserMappingConstant.ASSIGN_ROLE_BY_ID)
+    public ResponseEntity<ApiResponse<Object>> assignRole(@PathVariable Long id, @RequestBody RoleDto role) {
+        log.info("Received request to assign role {} to user with ID {}", role.getName(), id);
+        UserDto userDto = userService.assignRoleToUser(id, role);
+        return ResponseEntity.ok(ApiResponse.success(userDto, "Role assigned successfully"));
+    }
 
 }
