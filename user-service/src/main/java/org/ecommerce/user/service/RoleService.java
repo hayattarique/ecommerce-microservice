@@ -1,7 +1,7 @@
 package org.ecommerce.user.service;
 
 import org.ecommerce.user.dto.RoleDto;
-import org.ecommerce.utility.util.PageResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface RoleService {
@@ -19,5 +19,5 @@ public interface RoleService {
      * @return page
      */
 
-    PageResponse<RoleDto> getRoles(Pageable pageable);
+    Page<RoleDto> getRoles(Pageable pageable);
 }

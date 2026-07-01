@@ -24,14 +24,4 @@ public class PageResponse<T> {
         return new  PageResponse<T>(content, page, size, totalElements, totalPages, LocalDateTime.now());
     }
 
-    public PageResponse(List<T> content, int page, int size, long totalElements, int totalPages) {
-        this.content = content;
-        this.page = page;
-        this.size = size;
-        this.totalElements = totalElements;
-        this.totalPages = totalPages;
-        this.timestamp = LocalDateTime.now();
-    }
-
-
 }

@@ -8,6 +8,7 @@ import org.ecommerce.utility.constants.PageConstant;
 import org.ecommerce.utility.constants.RoleMappingConstant;
 import org.ecommerce.utility.util.ApiResponse;
 import org.ecommerce.utility.util.PageResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -27,15 +28,15 @@ public class RoleController {
 
 
     @GetMapping(RoleMappingConstant.GET_ALL_ROLES_BY_PAGINATED)
-    public ResponseEntity<PageResponse<RoleDto>> getAllRolesPaginated(
+    public ResponseEntity<PageResponse<?>> getAllRolesPaginated(
             @RequestParam(defaultValue = PageConstant.DEFAULT_PAGE_NUMBER) int page,
             @RequestParam(defaultValue = PageConstant.DEFAULT_PAGE_SIZE) int size,
             @RequestParam(defaultValue = PageConstant.DEFAULT_SORT_BY) String sortBy,
             @RequestParam(defaultValue = PageConstant.DEFAULT_SORT_DIRECTION) String dir) {
 
         Pageable pageable =PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(dir), sortBy));
-        PageResponse<RoleDto> pageResponse = roleService.getRoles(pageable);
+        Page<RoleDto> roles = roleService.getRoles(pageable);
 
-        return ResponseEntity.ok(pageResponse);
+        return ResponseEntity.ok(PageResponse.success(roles.getContent(), roles.getNumber(), roles.getSize(), roles.getTotalElements(), roles.getTotalPages()));
     }
 }

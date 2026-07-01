@@ -33,9 +33,9 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public PageResponse<RoleDto> getRoles(Pageable pageable) {
+    public Page<RoleDto> getRoles(Pageable pageable) {
         Page<RoleEntity> roleEntityPage = roleRepository.findAll(pageable);
-        List<RoleDto> roleList = roleEntityPage.getContent().stream().map(roleMapper::toDto).toList();
-        return new PageResponse<>(roleList, roleEntityPage.getNumber(), roleEntityPage.getSize(), roleEntityPage.getTotalElements(), roleEntityPage.getTotalPages());
+        Page<RoleDto> map = roleEntityPage.map(roleMapper::toDto);
+       return map;
     }
 }
