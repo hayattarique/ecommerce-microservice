@@ -1,4 +1,4 @@
-package org.ecommerce.utility.model;
+package org.ecommerce.utility.security.model;
 
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,13 +1,13 @@
-package org.ecommerce.utility.service.impl;
+package org.ecommerce.utility.security.service.impl;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import org.ecommerce.utility.config.JWTPropertiesConfig;
-import org.ecommerce.utility.model.AuthUserDetails;
-import org.ecommerce.utility.service.JWTService;
+import org.ecommerce.utility.security.config.JWTPropertiesConfig;
+import org.ecommerce.utility.security.model.AuthUserDetails;
+import org.ecommerce.utility.security.service.JWTService;
 
 import javax.crypto.SecretKey;
 import java.util.*;

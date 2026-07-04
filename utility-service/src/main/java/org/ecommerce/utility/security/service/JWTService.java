@@ -1,12 +1,10 @@
-package org.ecommerce.utility.service;
+package org.ecommerce.utility.security.service;
 
 import io.jsonwebtoken.Claims;
-import org.ecommerce.utility.model.AuthUserDetails;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.ecommerce.utility.security.model.AuthUserDetails;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 public interface JWTService {

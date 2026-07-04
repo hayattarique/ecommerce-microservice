@@ -6,7 +6,7 @@ import org.ecommerce.auth.service.entity.UserCredentialEntity;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
 import org.ecommerce.auth.service.integration.dto.UserDto;
 import org.ecommerce.auth.service.repositories.UserCredentialRepository;
-import org.ecommerce.utility.model.AuthUserDetails;
+import org.ecommerce.utility.security.model.AuthUserDetails;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

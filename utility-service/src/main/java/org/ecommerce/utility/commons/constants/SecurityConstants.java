@@ -1,4 +1,4 @@
-package org.ecommerce.utility.constants;
+package org.ecommerce.utility.commons.constants;
 
 public interface SecurityConstants {
     String AUTHORIZATION_HEADER = "Authorization";

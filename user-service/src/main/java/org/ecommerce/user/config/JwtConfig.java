@@ -1,8 +1,8 @@
 package org.ecommerce.user.config;
 
 import lombok.RequiredArgsConstructor;
-import org.ecommerce.utility.filter.JWTFilter;
-import org.ecommerce.utility.service.JWTService;
+import org.ecommerce.utility.security.filter.JWTFilter;
+import org.ecommerce.utility.security.service.JWTService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

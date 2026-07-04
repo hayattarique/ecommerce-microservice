@@ -1,4 +1,4 @@
-package org.ecommerce.utility.util;
+package org.ecommerce.utility.commons.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

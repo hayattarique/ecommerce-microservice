@@ -1,4 +1,4 @@
-package org.ecommerce.utility.filter;
+package org.ecommerce.utility.security.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,9 +7,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.ecommerce.utility.constants.SecurityConstants;
-import org.ecommerce.utility.model.AuthUserDetails;
-import org.ecommerce.utility.service.JWTService;
+import org.ecommerce.utility.commons.constants.SecurityConstants;
+import org.ecommerce.utility.security.model.AuthUserDetails;
+import org.ecommerce.utility.security.service.JWTService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

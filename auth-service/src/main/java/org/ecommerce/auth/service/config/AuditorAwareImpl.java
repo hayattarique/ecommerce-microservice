@@ -1,6 +1,6 @@
 package org.ecommerce.auth.service.config;
 
-import org.ecommerce.utility.model.AuthUserDetails;
+import org.ecommerce.utility.security.model.AuthUserDetails;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
