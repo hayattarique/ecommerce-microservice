@@ -1,6 +1,6 @@
 package org.ecommerce.user.config;
 
-import org.ecommerce.utility.security.model.AuthUserDetails;
+import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -22,7 +22,7 @@ public class AuditAwareConfig {
                 return Optional.empty();
             }
             Object principal = authentication.getPrincipal();
-            if (principal instanceof AuthUserDetails userDetails) {
+            if (principal instanceof AuthenticatedUser userDetails) {
                 return Optional.of(userDetails.getUsername());
             }
             return Optional.of("anonymous");
