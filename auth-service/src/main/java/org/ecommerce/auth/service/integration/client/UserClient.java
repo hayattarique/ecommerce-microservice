@@ -1,8 +1,8 @@
 package org.ecommerce.auth.service.integration.client;
 
 import org.ecommerce.auth.service.integration.dto.UserDto;
-import org.ecommerce.utility.constants.UserMappingConstant;
-import org.ecommerce.utility.util.ApiResponse;
+import org.ecommerce.utility.commons.constants.UserMappingConstant;
+import org.ecommerce.utility.commons.util.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;

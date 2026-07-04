@@ -1,4 +1,4 @@
-package org.ecommerce.utility.constants;
+package org.ecommerce.utility.commons.constants;
 
 public interface RoleMappingConstant {
     String BASE_URL = "/api/v1/roles";

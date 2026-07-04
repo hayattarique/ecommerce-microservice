@@ -1,4 +1,4 @@
-package org.ecommerce.utility.constants;
+package org.ecommerce.utility.commons.constants;
 
 public interface PageConstant {
     String DEFAULT_PAGE_NUMBER = "0";

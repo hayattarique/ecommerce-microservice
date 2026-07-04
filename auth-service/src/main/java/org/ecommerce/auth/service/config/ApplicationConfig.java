@@ -6,7 +6,7 @@ import org.ecommerce.auth.service.entity.UserCredentialEntity;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
 import org.ecommerce.auth.service.integration.dto.UserDto;
 import org.ecommerce.auth.service.repositories.UserCredentialRepository;
-import org.ecommerce.utility.model.AuthUserDetails;
+import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,7 +32,7 @@ public class ApplicationConfig {
             UserDto userDto = userAdapter.getUserByEmail(email);
             UserCredentialEntity userCredential = userCredentialRepository.findByUserAccountIdAndActiveIsTrue(userDto.getUserAccountId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            return AuthUserDetails.builder().email(email)
+            return AuthenticatedUser.builder().email(email)
                     .userId(userDto.getUserAccountId())
                     .email(userDto.getEmail())
                     .enabled(userCredential.isActive())

@@ -1,4 +1,4 @@
-package org.ecommerce.utility.model;
+package org.ecommerce.utility.security.model;
 
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthUserDetails implements UserDetails {
+public class AuthenticatedUser implements UserDetails {
 
     private Long userId;
 
@@ -64,10 +64,6 @@ public class AuthUserDetails implements UserDetails {
         return email;
     }
 
-    @Override
-    public String getPassword() {
-        return password;
-    }
 
     @Override
     public boolean isEnabled() {

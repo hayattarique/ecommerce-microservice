@@ -1,8 +1,8 @@
 package org.ecommerce.auth.service.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.ecommerce.utility.constants.ApiMessages;
-import org.ecommerce.utility.util.ErrorResponse;
+import org.ecommerce.utility.commons.constants.ApiMessages;
+import org.ecommerce.utility.commons.util.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;

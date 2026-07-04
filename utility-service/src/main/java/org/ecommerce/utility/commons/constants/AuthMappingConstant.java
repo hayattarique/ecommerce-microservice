@@ -1,4 +1,4 @@
-package org.ecommerce.utility.constants;
+package org.ecommerce.utility.commons.constants;
 
 
 public interface AuthMappingConstant {

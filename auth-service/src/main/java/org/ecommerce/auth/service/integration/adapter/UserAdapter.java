@@ -7,9 +7,8 @@ import org.ecommerce.auth.service.exception.ServiceException;
 import org.ecommerce.auth.service.integration.client.UserClient;
 import org.ecommerce.auth.service.integration.dto.UserDto;
 import org.ecommerce.auth.service.mapper.AuthenticationMapper;
-import org.ecommerce.utility.constants.ApiMessages;
-import org.ecommerce.utility.util.ApiResponse;
-import org.springframework.beans.BeanUtils;
+import org.ecommerce.utility.commons.constants.ApiMessages;
+import org.ecommerce.utility.commons.util.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
