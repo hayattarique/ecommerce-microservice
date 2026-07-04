@@ -2,24 +2,19 @@ package org.ecommerce.utility.security.service.impl;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import org.ecommerce.utility.security.config.JWTPropertiesConfig;
-import org.ecommerce.utility.security.service.JwtTokenValidator;
-import org.springframework.stereotype.Service;
+import org.ecommerce.utility.security.service.JwtTokenValidatorService;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 
-@Service
 @RequiredArgsConstructor
-public class JwtTokenValidatorServiceImpl implements JwtTokenValidator {
-    private final JWTPropertiesConfig  jwtPropertiesConfig;
+public class JwtTokenValidatorServiceImpl implements JwtTokenValidatorService {
 
+    private final SecretKey secretKey;
 
     @Override
     public Claims validateTokenAndGetClaims(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtPropertiesConfig.getSecretKey().getBytes(StandardCharsets.UTF_8));
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
     }
 }

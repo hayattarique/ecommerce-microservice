@@ -2,7 +2,7 @@ package org.ecommerce.utility.security.service;
 
 import io.jsonwebtoken.Claims;
 
-public interface JwtTokenValidator {
+public interface JwtTokenValidatorService {
 
 
  Claims validateTokenAndGetClaims(String token);

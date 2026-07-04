@@ -1,6 +1,6 @@
 package org.ecommerce.auth.service.config;
 
-import org.ecommerce.utility.security.model.AuthUserDetails;
+import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +27,7 @@ public class AuditorAwareImpl {
 
             Object principal = authentication.getPrincipal();
 
-            if (principal instanceof AuthUserDetails userDetails) {
+            if (principal instanceof AuthenticatedUser userDetails) {
                 return Optional.of(userDetails.getUsername());
             }
 
