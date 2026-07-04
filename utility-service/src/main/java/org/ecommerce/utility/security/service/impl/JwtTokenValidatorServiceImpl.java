@@ -2,24 +2,28 @@ package org.ecommerce.utility.security.service.impl;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import org.ecommerce.utility.security.config.JWTPropertiesConfig;
-import org.ecommerce.utility.security.service.JwtTokenValidator;
+import org.ecommerce.utility.security.constants.JwtClaimConstants;
+import org.ecommerce.utility.security.service.JwtTokenValidatorService;
+import org.ecommerce.utility.security.utils.TokenType;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
-public class JwtTokenValidatorServiceImpl implements JwtTokenValidator {
-    private final JWTPropertiesConfig  jwtPropertiesConfig;
+public class JwtTokenValidatorServiceImpl implements JwtTokenValidatorService {
 
+    private final SecretKey secretKey;
 
     @Override
     public Claims validateTokenAndGetClaims(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtPropertiesConfig.getSecretKey().getBytes(StandardCharsets.UTF_8));
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+
+        Claims payload = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+        if (!payload.get(JwtClaimConstants.TOKEN_TYPE).equals(TokenType.ACCESS_TOKEN.name())) {
+            throw new BadCredentialsException("Invalid token type");
+        }
+        return payload;
     }
 }

@@ -1,5 +1,6 @@
 package org.ecommerce.utility.security.filter;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,24 +9,24 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ecommerce.utility.commons.constants.SecurityConstants;
-import org.ecommerce.utility.security.model.AuthUserDetails;
-import org.ecommerce.utility.security.service.JWTService;
+import org.ecommerce.utility.security.exception.JwtAuthenticationException;
+import org.ecommerce.utility.security.model.AuthenticatedUser;
+import org.ecommerce.utility.security.service.JwtClaimExtractorService;
+import org.ecommerce.utility.security.service.JwtTokenValidatorService;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
 public class JWTFilter extends OncePerRequestFilter {
 
-    private final JWTService jwtService;
+    private final JwtTokenValidatorService jwtTokenValidator;
+    private final JwtClaimExtractorService jwtClaimExtractor;
 
 
     @Override
@@ -39,53 +40,25 @@ public class JWTFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+
         String token = header.substring(SecurityConstants.AUTHORIZATION_HEADER_PREFIX.length());
         // step 2 validate token
-        if (!jwtService.validateToken(token)) {
-            log.warn("Invalid JWT token: {}", token);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-        // check only access token is used in access token context, refresh token should not be used here
-        if (jwtService.isRefreshToken(token)) {
-            log.warn("Refresh token used in access token context: {}", token);
-            filterChain.doFilter(request, response);
-            return;
-        }
-        // Avoid duplicate authentication
         try {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                Long userId = jwtService.extractUserId(token);
-                String email = jwtService.extractEmail(token);
-                List<String> roles = jwtService.extractRoles(token);
-                List<String> permissions = jwtService.extractPermissions(token);
-
-                List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
-                roles.forEach(role -> grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
-                permissions.forEach(permission -> grantedAuthorities.add(new SimpleGrantedAuthority(permission)));
-                AuthUserDetails authUserDetails = AuthUserDetails.builder()
-                        .userId(userId)
-                        .email(email)
-                        .enabled(true)
-                        .accountNonExpired(true)
-                        .accountNonLocked(true)
-                        .credentialsNonExpired(true)
-                        .roles(roles)
-                        .permissions(permissions)
-                        .build();
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        authUserDetails, token, grantedAuthorities);
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
-
+                Claims claims = jwtTokenValidator.validateTokenAndGetClaims(token);
+                AuthenticatedUser userDetails = jwtClaimExtractor.extractUserDetailsFromToken(claims);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-        } catch (Exception e) {
-            log.error("Authentication failed.", e);
+
+
+        } catch (JwtAuthenticationException e) {
+            log.error("Error occurred while processing JWT token", e);
             SecurityContextHolder.clearContext();
+            throw new BadCredentialsException("Invalid JWT token: " + e.getMessage(), e);
         }
         filterChain.doFilter(request, response);
-
 
     }
 }

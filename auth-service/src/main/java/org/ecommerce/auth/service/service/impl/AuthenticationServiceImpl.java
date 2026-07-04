@@ -10,11 +10,11 @@ import org.ecommerce.auth.service.entity.RefreshTokenEntity;
 import org.ecommerce.auth.service.entity.UserCredentialEntity;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
 import org.ecommerce.auth.service.integration.dto.UserDto;
+import org.ecommerce.auth.service.jwt.JwtTokenGenerator;
 import org.ecommerce.auth.service.repositories.RefreshTokenRepository;
 import org.ecommerce.auth.service.repositories.UserCredentialRepository;
 import org.ecommerce.auth.service.service.AuthenticationService;
-import org.ecommerce.utility.security.model.AuthUserDetails;
-import org.ecommerce.utility.security.service.JWTService;
+import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -36,7 +36,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final UserAdapter userAdapter;
-    private final JWTService jwtService;
+    private final JwtTokenGenerator jwtTokenGenerator;
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
@@ -82,23 +82,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        if (authenticate.getPrincipal() instanceof AuthUserDetails authenticationDetails) {
-            String accessToken = jwtService.generateAccessToken(authenticationDetails);
+        if (authenticate.getPrincipal() instanceof AuthenticatedUser authenticationDetails) {
+            String accessToken = jwtTokenGenerator.generateAccessToken(authenticationDetails);
             UserCredentialEntity credentialEntity = credentialRepository.findByUserAccountIdAndActiveIsTrue(authenticationDetails.getUserId())
                     .orElseThrow(() -> new IllegalStateException("User credentials not found"));
             Optional<RefreshTokenEntity> refreshTokenEntity =
                     refreshTokenRepository.findByUserAccountIdAndExpiredAtAfter(authenticationDetails.getUserId(), LocalDateTime.now());
             if (refreshTokenEntity.isEmpty()) {
-                String refreshToken = jwtService.generateRefreshToken(authenticationDetails);
+                String refreshToken = jwtTokenGenerator.generateRefreshToken(authenticationDetails);
                 RefreshTokenEntity refreshTokenEntity1 = new RefreshTokenEntity();
                 refreshTokenEntity1.setUserAccountId(authenticationDetails.getUserId());
                 refreshTokenEntity1.setToken(refreshToken);
                 refreshTokenEntity1.setExpiredAt(LocalDateTime.now().plusDays(30)); // Set expiration date for refresh token
                 credentialEntity.addRefreshToken(refreshTokenEntity1);
                 credentialRepository.save(credentialEntity);
-                return new AuthenticationResponse(accessToken, refreshToken);
+//                return new AuthenticationResponse(accessToken, refreshToken);
             }
-            return new AuthenticationResponse(accessToken, refreshTokenEntity.get().getToken());
+//            return new AuthenticationResponse(accessToken, refreshTokenEntity.get().getToken());
 
         }
         return null;
