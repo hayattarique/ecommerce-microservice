@@ -28,5 +28,6 @@ public class UserDto {
     private String mobile;
     private LocalDate dateOfBirth;
     private Set<String> roles;
+    private Set<String> permissions;
 
    }

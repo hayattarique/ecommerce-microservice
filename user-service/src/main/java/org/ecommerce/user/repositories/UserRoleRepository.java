@@ -9,15 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface UserRoleRepository extends JpaRepository<UserRoleEntity, Long> {
-    @Query("""
-            SELECT DISTINCT p.name
-            FROM UserRoleEntity ur
-            JOIN ur.role r
-            JOIN r.permissions rp
-            JOIN rp.permission p
-            WHERE ur.user.email = :email
-            """)
-    List<String> findAllPermissionByEmail(@Param("email") String email);
+
 
     @Query("SELECT CASE WHEN COUNT(ur) > 0 THEN true ELSE false END " +
             "FROM UserRoleEntity ur " +

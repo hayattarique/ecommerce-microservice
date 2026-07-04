@@ -8,6 +8,7 @@ import org.ecommerce.user.entity.UserEntity;
 import org.ecommerce.user.entity.UserRoleEntity;
 import org.ecommerce.user.mapper.RoleMapper;
 import org.ecommerce.user.mapper.UserMapper;
+import org.ecommerce.user.repositories.PermissionRepository;
 import org.ecommerce.user.repositories.RoleRepository;
 import org.ecommerce.user.repositories.UserRepository;
 import org.ecommerce.user.repositories.UserRoleRepository;
@@ -27,8 +28,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     final UserRoleRepository userRoleRepository;
+    private final PermissionRepository permissionRepository;
     private final UserMapper userMapper;
-    private final RoleMapper roleMapper;
 
 
     @Override
@@ -47,8 +48,10 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = userRepository.findByEmail(email).orElseThrow();
         List<RoleEntity> listOfRoles = userRoleRepository.findAllRolesByUserId(userEntity.getId());
         Set<String> roles = listOfRoles.stream().map(RoleEntity::getName).collect(Collectors.toSet());
+        Set<String> permissions = new HashSet<>(permissionRepository.findAllPermissionsByEmail(email));
         UserDto dto = userMapper.toDto(userEntity);
         dto.setRoles(roles);
+        dto.setPermissions(permissions);
         dto.setUserAccountId(userEntity.getId());
         return dto;
     }
