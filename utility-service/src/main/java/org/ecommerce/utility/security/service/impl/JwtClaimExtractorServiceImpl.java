@@ -4,14 +4,12 @@ import io.jsonwebtoken.Claims;
 import org.ecommerce.utility.security.constants.JwtClaimConstants;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.ecommerce.utility.security.service.JwtClaimExtractorService;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-public class JwtTClaimExtractorServiceImpl implements JwtClaimExtractorService {
+public class JwtClaimExtractorServiceImpl implements JwtClaimExtractorService {
     @Override
-    public AuthenticatedUser extractUserDetailsFromToken(Claims claims) {
+    public AuthenticatedUser extractAuthenticatedUser(Claims claims) {
 
 
         return AuthenticatedUser.builder()

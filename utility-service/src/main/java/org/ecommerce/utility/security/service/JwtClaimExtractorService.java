@@ -5,5 +5,5 @@ import org.ecommerce.utility.security.model.AuthenticatedUser;
 
 public interface JwtClaimExtractorService {
 
-    AuthenticatedUser extractUserDetailsFromToken(Claims claims);
+    AuthenticatedUser extractAuthenticatedUser(Claims claims);
 }
