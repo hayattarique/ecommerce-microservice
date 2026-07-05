@@ -1,6 +1,5 @@
 package org.ecommerce.auth.service.service.impl;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
@@ -8,12 +7,15 @@ import org.ecommerce.auth.service.dto.AuthenticationResponse;
 import org.ecommerce.auth.service.dto.SignupRequest;
 import org.ecommerce.auth.service.entity.RefreshTokenEntity;
 import org.ecommerce.auth.service.entity.UserCredentialEntity;
+import org.ecommerce.auth.service.exception.AuthenticationException;
+import org.ecommerce.auth.service.exception.DownstreamServiceException;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
 import org.ecommerce.auth.service.integration.dto.UserDto;
 import org.ecommerce.auth.service.jwt.JwtTokenGenerator;
 import org.ecommerce.auth.service.repositories.RefreshTokenRepository;
 import org.ecommerce.auth.service.repositories.UserCredentialRepository;
 import org.ecommerce.auth.service.service.AuthenticationService;
+import org.ecommerce.auth.service.util.AuthErrorCode;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -45,7 +47,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Registering user with email: {}", signupRequest.getEmail());
 
         // Step 1: Validate password match first (before calling external service)
-        validatePassword(signupRequest);
+        String encodedPassword = validatePasswordAndReturn(signupRequest);
 
         try {
             // Step 2: Call UserAdapter to register with user service
@@ -55,7 +57,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             // Step 3: Check if registration was successful
             if (userDto == null) {
                 log.error("User registration failed - null response from UserAdapter");
-                throw new IllegalStateException("Failed to register user in user service");
+                throw new DownstreamServiceException(AuthErrorCode.REGISTRATION_FAILED);
             }
 
             // Step 4: Save credentials in auth-service database
@@ -63,7 +65,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             UserCredentialEntity credentialEntity =
                     new UserCredentialEntity();
             credentialEntity.setUserAccountId(userDto.getUserAccountId());
-            credentialEntity.setPassword(signupRequest.getPassword()); // Already encoded by validatePassword()
+            credentialEntity.setPassword(encodedPassword); // Already encoded by validatePassword()
             credentialEntity.setStatus(true);
 
             credentialRepository.save(credentialEntity);
@@ -72,9 +74,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             // Step 5: Return success
             return true;
 
-        } catch (Exception e) {
+        } catch (AuthenticationException e) {
             log.error("Error during user registration for email: {}", signupRequest.getEmail(), e);
-            throw e; // Re-throw for GlobalExceptionHandler to catch
+            throw new DownstreamServiceException(AuthErrorCode.REGISTRATION_FAILED); // Re-throw for GlobalExceptionHandler to catch
         }
     }
 
@@ -101,44 +103,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new AuthenticationResponse(accessToken, refreshTokenEntity.get().getToken());
 
         }
-        return null;
+        throw new AuthenticationException(AuthErrorCode.INVALID_CREDENTIALS);
     }
 
     /**
      * Validate password and confirm password match
      * Encodes password if they match, otherwise throws exception
      */
-    private void validatePassword(SignupRequest signupRequest) {
+    private String validatePasswordAndReturn(SignupRequest signupRequest) {
         if (!signupRequest.getPassword().equals(signupRequest.getConfirmPassword())) {
             throw new IllegalArgumentException("Password and confirm password do not match");
         }
 
         // Encode password for storage
-        String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
-        signupRequest.setPassword(encodedPassword);
         log.debug("Password validation successful");
-    }
-
-    private String getIpAddress(HttpServletRequest request) {
-
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-
-        if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
-            // In case of multiple IPs, take first one
-            return xForwardedFor.split(",")[0];
-        }
-
-        String proxyClientIp = request.getHeader("Proxy-Client-IP");
-        if (proxyClientIp != null && !proxyClientIp.isEmpty() && !"unknown".equalsIgnoreCase(proxyClientIp)) {
-            return proxyClientIp;
-        }
-
-        String wlProxyClientIp = request.getHeader("WL-Proxy-Client-IP");
-        if (wlProxyClientIp != null && !wlProxyClientIp.isEmpty() && !"unknown".equalsIgnoreCase(wlProxyClientIp)) {
-            return wlProxyClientIp;
-        }
-
-        return request.getRemoteAddr();
+        return passwordEncoder.encode(signupRequest.getPassword());
     }
 
 
