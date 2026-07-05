@@ -24,7 +24,7 @@ public class AuthenticationController {
     
 
     @PostMapping(AuthMappingConstant.REGISTER)
-    public ResponseEntity<Object> register(
+    public ResponseEntity<ApiResponse<Object>> register(
              @RequestBody SignupRequest request) {
 
         log.info("User registration request received for email: {}", request.getEmail());

@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto registerUser(UserDto userDto) {
         UserEntity entity = userMapper.toEntity(userDto);
-        entity.setActive(true);
+        entity.setStatus(true);
         userRepository.save(entity);
         userDto.setUserAccountId(entity.getId());
         return userDto;

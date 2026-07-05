@@ -24,6 +24,7 @@ public class UserEntity extends BaseEntity {
     private String gender;
     @Column(unique = true)
     private String mobile;
+    private boolean status;
     private LocalDate dateOfBirth;
     @OneToMany(mappedBy = "user")
     private Set<UserRoleEntity> roles;

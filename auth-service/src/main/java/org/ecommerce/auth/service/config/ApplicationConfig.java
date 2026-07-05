@@ -35,7 +35,7 @@ public class ApplicationConfig {
             return AuthenticatedUser.builder().email(email)
                     .userId(userDto.getUserAccountId())
                     .email(userDto.getEmail())
-                    .enabled(userCredential.isActive())
+                    .enabled(userCredential.isStatus())
                     .password(userCredential.getPassword())
                     .roles(userDto.getRoles())
                     .permissions(userDto.getPermissions())
