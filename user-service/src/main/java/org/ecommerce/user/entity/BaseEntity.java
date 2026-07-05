@@ -14,18 +14,23 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @CreatedBy
     private String createdBy;
+
     @CreatedDate
     private LocalDateTime createdAt;
+
     @LastModifiedBy
     private String updatedBy;
+
     @LastModifiedDate
     private LocalDateTime updatedAt;
-    private boolean active = true;
+
     private LocalDateTime deletedAt;
 
 }
