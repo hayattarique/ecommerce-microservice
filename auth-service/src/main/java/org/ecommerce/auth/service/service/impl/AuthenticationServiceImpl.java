@@ -96,9 +96,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 refreshTokenEntity1.setExpiredAt(LocalDateTime.now().plusDays(30)); // Set expiration date for refresh token
                 credentialEntity.addRefreshToken(refreshTokenEntity1);
                 credentialRepository.save(credentialEntity);
-//                return new AuthenticationResponse(accessToken, refreshToken);
+                return new AuthenticationResponse(accessToken, refreshToken);
             }
-//            return new AuthenticationResponse(accessToken, refreshTokenEntity.get().getToken());
+            return new AuthenticationResponse(accessToken, refreshTokenEntity.get().getToken());
 
         }
         return null;

@@ -33,6 +33,15 @@ public class JwtTokenGeneratorImpl implements JwtTokenGenerator {
 
 
     private String buildToken(AuthenticatedUser authenticatedUser, TokenType tokenType,long expiration) {
+
+        if (tokenType == TokenType.REFRESH_TOKEN) {
+            return Jwts.builder()
+                    .subject(authenticatedUser.getEmail())
+                    .claim(TOKEN_TYPE, tokenType)
+                    .issuedAt(new Date())
+                    .expiration(new Date(System.currentTimeMillis() + expiration))
+                    .signWith(secretKey).compact();
+        }
         return Jwts.builder()
                 .subject(authenticatedUser.getEmail())
                 .claim(USER_ID, authenticatedUser.getUserId())
