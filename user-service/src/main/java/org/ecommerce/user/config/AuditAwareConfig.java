@@ -23,7 +23,7 @@ public class AuditAwareConfig {
             }
             Object principal = authentication.getPrincipal();
             if (principal instanceof AuthenticatedUser userDetails) {
-                return Optional.of(userDetails.getUsername());
+                return Optional.of(userDetails.getEmail());
             }
             return Optional.of("anonymous");
         };
