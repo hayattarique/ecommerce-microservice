@@ -4,6 +4,14 @@
 
 ---
 
+## 📌 Repository Status
+
+🚧 **Actively Under Development**
+
+This project is being developed incrementally by following enterprise software engineering practices. New features are delivered through sprint-based development with continuous refactoring, testing, and architectural improvements.
+
+---
+
 ## 📖 Overview
 
 This project is an enterprise-grade e-commerce backend designed to simulate how large-scale organizations build distributed systems. The application is developed using a microservices architecture with a strong focus on scalability, maintainability, security, and production readiness.
