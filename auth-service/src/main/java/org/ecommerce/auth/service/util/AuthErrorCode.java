@@ -33,6 +33,11 @@ public enum AuthErrorCode implements ErrorCode {
             "Refresh token is invalid.",
             HttpStatus.UNAUTHORIZED
     ),
+    REFRESH_TOKEN_NOT_FOUND(
+            "AUTH_302",
+            "Refresh token not found.",
+            HttpStatus.NOT_FOUND
+    ),
 
     USER_SERVICE_UNAVAILABLE(
             "AUTH_501",
