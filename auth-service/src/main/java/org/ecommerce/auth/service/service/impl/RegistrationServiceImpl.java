@@ -51,7 +51,6 @@ public class RegistrationServiceImpl implements RegistrationService {
                     new UserCredentialEntity();
             credentialEntity.setUserAccountId(userDto.getUserAccountId());
             credentialEntity.setPassword(encodedPassword); // Already encoded by validatePassword()
-            credentialEntity.setStatus(true);
 
             credentialRepository.save(credentialEntity);
             log.info("User credentials saved successfully for email: {}", signupRequest.getEmail());

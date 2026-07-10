@@ -33,9 +33,10 @@ public class ApplicationConfig {
             UserCredentialEntity userCredential = userCredentialRepository.findByUserAccountIdAndActiveIsTrue(userDto.getUserAccountId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
             return AuthenticatedUser.builder().email(email)
-                    .userId(userDto.getUserAccountId())
+                    .userId(userCredential.getId())
+                    .userAccountId(userDto.getUserAccountId())
                     .email(userDto.getEmail())
-                    .enabled(userCredential.isStatus())
+                    .enabled(userCredential.isActive())
                     .password(userCredential.getPassword())
                     .roles(userDto.getRoles())
                     .permissions(userDto.getPermissions())

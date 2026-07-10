@@ -26,6 +26,7 @@ public class UserDto {
     private String displayName;
     private String gender;
     private String mobile;
+    private Boolean active;
     private LocalDate dateOfBirth;
     private Set<String> roles;
     private Set<String> permissions;

@@ -8,7 +8,6 @@ import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 import org.ecommerce.auth.service.dto.SignupRequest;
 import org.ecommerce.auth.service.service.AuthenticationService;
 import org.ecommerce.auth.service.service.RegistrationService;
-import org.ecommerce.auth.service.service.TokenService;
 import org.ecommerce.utility.commons.constants.ApiMessages;
 import org.ecommerce.utility.commons.constants.AuthMappingConstant;
 import org.ecommerce.utility.commons.util.ApiResponse;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final RegistrationService registrationService;
-    private final TokenService tokenService;
 
 
     @PostMapping(AuthMappingConstant.REGISTER)

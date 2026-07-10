@@ -1,5 +1,7 @@
 package org.ecommerce.auth.service.service;
 
+import org.ecommerce.auth.service.dto.RefreshTokenRequest;
+import org.ecommerce.auth.service.entity.RefreshTokenEntity;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
 
 public interface TokenService {
@@ -22,11 +24,11 @@ public interface TokenService {
     String generateRefreshToken(AuthenticatedUser user);
 
     /**
-    * Validates the given refresh token.
-    *
-    * @param token the refresh token to validate
-    * @return true if the token is valid, false otherwise
-    */
+     * Validates the given refresh token.
+     *
+     * @param token the refresh token to validate
+     * @return true if the token is valid, false otherwise
+     */
 
     Boolean validateRefreshToken(String token);
 

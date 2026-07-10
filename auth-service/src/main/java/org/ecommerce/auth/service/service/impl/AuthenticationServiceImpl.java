@@ -31,7 +31,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
     private final JwtTokenValidatorService jwtTokenValidator;
-    private final UserAdapter  userAdapter;
+    private final UserAdapter userAdapter;
 
 
     @Override
@@ -39,6 +39,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AuthenticationDto authenticate(AuthenticationRequest request) {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         if (authenticate.getPrincipal() instanceof AuthenticatedUser authenticationDetails) {
+            tokenService.revokeAllRefreshTokensForUser(authenticationDetails.getUserId());
             String accessToken = tokenService.generateAccessToken(authenticationDetails);
             String refreshToken = tokenService.generateRefreshToken(authenticationDetails);
             return new AuthenticationDto(authenticationDetails.getUserId(), accessToken, refreshToken);
