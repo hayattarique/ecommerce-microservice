@@ -30,7 +30,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpServletResponse.SC_UNAUTHORIZED)
                 .message(exceptionMessage(authException))
-                .error("Unauthorized")
+                .errorCode("Unauthorized")
                 .path(request.getRequestURI())
                 .timestamp(LocalDateTime.now())
                 .build();

@@ -18,6 +18,8 @@ public class AuthenticatedUser implements UserDetails {
 
     private Long userId;
 
+    private Long userAccountId;
+
     private String email;
 
     private String password;
