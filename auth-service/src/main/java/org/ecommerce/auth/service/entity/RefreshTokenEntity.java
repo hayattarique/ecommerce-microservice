@@ -15,6 +15,7 @@ public class RefreshTokenEntity extends BaseEntity {
     private String token;
     private LocalDateTime expiredAt;
     private Long userAccountId;
+    private Boolean active = true;
     @ManyToOne(optional = false)
     @JoinColumn(name = "credential_id")
     private UserCredentialEntity userCredential;
