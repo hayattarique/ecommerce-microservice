@@ -15,6 +15,7 @@ import java.util.Set;
 public class PermissionEntity extends BaseEntity {
     private String name;
     private String description;
+    private boolean active = true;
     @OneToMany(mappedBy = "permission")
     private Set<RolePermissionEntity> roles;
 }
