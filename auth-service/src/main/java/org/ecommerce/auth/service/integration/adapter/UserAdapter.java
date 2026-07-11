@@ -3,11 +3,11 @@ package org.ecommerce.auth.service.integration.adapter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ecommerce.auth.service.dto.SignupRequest;
-import org.ecommerce.auth.service.exception.ServiceException;
+import org.ecommerce.auth.service.exception.DownstreamServiceException;
 import org.ecommerce.auth.service.integration.client.UserClient;
 import org.ecommerce.auth.service.integration.dto.UserDto;
 import org.ecommerce.auth.service.mapper.AuthenticationMapper;
-import org.ecommerce.utility.commons.constants.ApiMessages;
+import org.ecommerce.auth.service.util.AuthErrorCode;
 import org.ecommerce.utility.commons.util.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -28,10 +28,10 @@ public class UserAdapter {
                 return response.getBody().getData();
             }
             log.warn("USER-CLIENT RESPONSE NOT SUCCESSFUL {}", email);
-            throw new ServiceException("USER-CLIENT RESPONSE NOT SUCCESSFUL " + email,ApiMessages.INTERNAL_ERROR,500);
+            throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
         } catch (Exception e) {
             log.error("ERROR CALLING USER-CLIENT {}", email, e);
-            throw new IllegalStateException("ERROR CALLING USER-CLIENT " + email, e);
+            throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
         }
 
     }
@@ -47,12 +47,11 @@ public class UserAdapter {
                 return response.getBody().getData();
             } else {
                 log.warn("USER-CLIENT REGISTER RESPONSE NOT SUCCESSFUL {}", signupRequest.getEmail());
-                throw new ServiceException("USER-CLIENT REGISTER RESPONSE NOT SUCCESSFUL " + signupRequest.getEmail(),
-                        ApiMessages.REGISTRATION_FAILED,response.getStatusCode().value());
+                throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
             }
-        } catch (ServiceException e) {
+        } catch (DownstreamServiceException e) {
             log.error("ERROR CALLING USER-CLIENT REGISTER {}", signupRequest.getEmail(), e);
-            throw new ServiceException("ERROR CALLING USER-CLIENT REGISTER " + signupRequest.getEmail(), ApiMessages.REGISTRATION_FAILED, e.getStatusCode());
+            throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
         }
 
     }

@@ -19,23 +19,23 @@ public abstract class BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    protected Long id;
 
     @CreatedBy
-    private String createdBy;
+    protected String createdBy;
 
     @LastModifiedBy
-    private String updatedBy;
+    protected String updatedBy;
 
     @CreatedDate
     @Column(updatable = false)
-    private LocalDateTime createdAt;
+    protected LocalDateTime createdAt;
 
     @LastModifiedDate
-    private LocalDateTime updatedAt;
+    protected LocalDateTime updatedAt;
 
     @Version
-    private Long version;
+    protected Integer version;
 
 
 }

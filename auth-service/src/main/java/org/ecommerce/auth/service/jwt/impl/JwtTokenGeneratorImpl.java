@@ -36,15 +36,18 @@ public class JwtTokenGeneratorImpl implements JwtTokenGenerator {
 
         if (tokenType == TokenType.REFRESH_TOKEN) {
             return Jwts.builder()
-                    .subject(authenticatedUser.getEmail())
+                    .subject(authenticatedUser.getId().toString())
+                    .claim(USER_ACCOUNT_ID, authenticatedUser.getUserAccountId())
+                    .claim(EMAIL, authenticatedUser.getEmail())
                     .claim(TOKEN_TYPE, tokenType)
                     .issuedAt(new Date())
                     .expiration(new Date(System.currentTimeMillis() + expiration))
                     .signWith(secretKey).compact();
         }
         return Jwts.builder()
-                .subject(authenticatedUser.getEmail())
-                .claim(USER_ID, authenticatedUser.getUserId())
+                .subject(authenticatedUser.getId().toString())
+                .claim(USER_ACCOUNT_ID, authenticatedUser.getUserAccountId())
+                .claim(EMAIL, authenticatedUser.getEmail())
                 .claim(ROLES, authenticatedUser.getRoles())
                 .claim(PERMISSIONS, authenticatedUser.getPermissions())
                 .claim(TOKEN_TYPE, tokenType)
