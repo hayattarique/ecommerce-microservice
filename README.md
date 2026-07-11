@@ -1,26 +1,28 @@
 # 🛒 Enterprise E-Commerce Microservices
 
-> A production-ready enterprise e-commerce backend built using Java, Spring Boot, Spring Cloud, and Microservices following industry-standard architecture, clean coding practices, and enterprise software engineering principles.
+> A production-ready enterprise e-commerce backend built using **Java 21**, **Spring Boot**, **Spring Cloud**, and **Microservices**, following enterprise software engineering principles, clean architecture, and industry-standard development practices.
 
 ---
 
-## 📌 Repository Status
+# 📌 Repository Status
 
 🚧 **Actively Under Development**
 
-This project is being developed incrementally by following enterprise software engineering practices. New features are delivered through sprint-based development with continuous refactoring, testing, and architectural improvements.
+This project is being developed incrementally using a sprint-based approach that reflects real-world enterprise software development. Features are implemented through iterative development, code reviews, testing, refactoring, and continuous architectural improvements.
 
 ---
 
-## 📖 Overview
+# 📖 Overview
 
-This project is an enterprise-grade e-commerce backend designed to simulate how large-scale organizations build distributed systems. The application is developed using a microservices architecture with a strong focus on scalability, maintainability, security, and production readiness.
+Enterprise E-Commerce Microservices is a distributed backend application designed to simulate how large organizations build scalable and maintainable software systems.
 
-The project is being built incrementally using sprint-based development, code reviews, refactoring, and enterprise engineering practices rather than tutorial-driven development.
+Instead of following tutorial-based implementations, this project focuses on enterprise engineering practices including modular architecture, reusable components, centralized configuration, security, database versioning, and production-ready design.
+
+The objective is to demonstrate how enterprise Java applications are structured and developed in professional software teams.
 
 ---
 
-## 🚀 Technology Stack
+# 🚀 Technology Stack
 
 | Technology | Version |
 |------------|---------|
@@ -30,6 +32,7 @@ The project is being built incrementally using sprint-based development, code re
 | Spring Security | Latest |
 | Spring Data JPA | Latest |
 | PostgreSQL | Latest |
+| Flyway | Latest |
 | Maven | Latest |
 | JWT (JJWT) | Latest |
 | Eureka Discovery | ✔ |
@@ -37,50 +40,85 @@ The project is being built incrementally using sprint-based development, code re
 
 ---
 
-## 🏗️ Architecture
+# 🏗️ Architecture
+
+The project follows a distributed microservices architecture with reusable infrastructure components.
+
+### Core Components
 
 - Microservices Architecture
 - Spring Cloud Gateway
-- Service Discovery (Eureka)
-- Centralized Configuration
+- Eureka Service Discovery
+- Spring Cloud Config Server
 - Stateless JWT Authentication
+- Refresh Token Authentication
 - Role-Based Access Control (RBAC)
 - Shared Security Starter
 - Shared Common Library
 - Enterprise Exception Handling
+- Global Response Wrapper
 - Reusable Auto Configuration
+- Database Versioning with Flyway
+- Environment-Based Configuration
+- Production-Oriented Project Structure
 
 ---
 
-## 📦 Modules
+# 📦 Microservices
+
+Current modules include:
 
 - Authentication Service
 - User Service
 - API Gateway
 - Config Server
 - Discovery Server
-- Shared Utility Library
+- Shared Security Starter
+- Shared Common Library
+
+Additional services will be introduced throughout the development roadmap.
 
 ---
 
-## 🔐 Security
+# 🔐 Security
 
-The application follows a **stateless authentication model**.
+The application follows a **stateless authentication model** built around JWT.
 
-- JWT Access & Refresh Tokens
+### Authentication Features
+
+- JWT Access Token
+- JWT Refresh Token
+- Token Rotation
+- Stateless Authentication
 - Spring Security
 - Role-Based Access Control (RBAC)
 - Method-Level Authorization
-- Shared Security Infrastructure
+- Centralized Security Configuration
+- Shared Authentication Infrastructure
 - Enterprise Exception Handling
 
-JWT generation is handled exclusively by the **Authentication Service**, while JWT validation and security infrastructure are provided through a reusable shared module.
+JWT generation is handled exclusively by the **Authentication Service**, while JWT validation and security infrastructure are provided through a reusable shared starter that can be integrated into any microservice.
 
 ---
 
-## 🌿 Git Branching Strategy
+# 🗄️ Database Migration
 
-The project follows a structured Git branching strategy similar to enterprise development workflows.
+The project uses **Flyway** for database schema versioning and migration management.
+
+### Benefits
+
+- Version-controlled SQL migrations
+- Automatic database migration during application startup
+- Consistent schema across development, QA, staging, and production
+- Safe database evolution
+- Repeatable migration history
+- Production-ready migration strategy
+
+---
+
+# 🌿 Git Branching Strategy
+
+The project follows an enterprise Git workflow.
 
 ```
 main
@@ -90,74 +128,160 @@ main
 ├── qa
 │
 ├── dev
-     |── feature/...
+│    ├── feature/authentication
+│    ├── feature/user-service
+│    ├── feature/security
+│    └── feature/...
 ```
 
 ### Branch Responsibilities
 
-- **main** → Production-ready code
-- **stage** → Pre-production environment
-- **qa** → Quality Assurance & Testing
-- **dev** → Active development branch
-- **feature/*** → Individual feature development
+| Branch | Purpose |
+|----------|----------|
+| main | Production-ready code |
+| stage | Pre-production deployment |
+| qa | Testing & Quality Assurance |
+| dev | Active development |
+| feature/* | Feature implementation |
 
-Every feature is dev in an isolated feature branch and merged through Pull Requests after review.
+Every feature is developed in an isolated feature branch and merged through Pull Requests after review and testing.
 
 ---
 
-## 📈 Current Progress
+# 📈 Current Progress
+
+## Infrastructure
 
 - ✅ Multi-module Maven Project
+- ✅ Enterprise Project Structure
 - ✅ Spring Cloud Config Server
 - ✅ Eureka Discovery Server
-- ✅ Shared Utility Module
-- ✅ Enterprise Exception Framework
-- ✅ JWT Infrastructure
+- ✅ API Gateway
+- ✅ Shared Utility Library
 - ✅ Shared Security Starter
-- ✅ Stateless Authentication Foundation
 - ✅ Auto Configuration
-- ✅ Enterprise Project Structure
+- ✅ Global Exception Framework
+- ✅ Global Response Wrapper
+
+## Security
+
+- ✅ JWT Infrastructure
+- ✅ Stateless Authentication Foundation
+- ✅ Refresh Token Infrastructure
+- ✅ Security Configuration
+- ✅ Authentication Framework
+
+## Database
+
+- ✅ PostgreSQL Integration
+- ✅ Flyway Database Migration
+- ✅ Version-Controlled SQL Scripts
 
 ---
 
-## 🗺️ Development Roadmap
+# 🗺️ Development Roadmap
+
+## Authentication
 
 - ✅ Enterprise Project Setup
 - ✅ Shared Security Infrastructure
 - ✅ JWT Authentication
-- ⏳ Login & Registration
+- ⏳ User Registration
+- ⏳ Login
 - ⏳ Refresh Token
 - ⏳ Logout
-- ⏳ RBAC
+- ⏳ Password Encryption
+- ⏳ Role-Based Access Control
+
+## Business Services
+
 - ⏳ Product Service
+- ⏳ Category Service
+- ⏳ Inventory Service
+- ⏳ Cart Service
 - ⏳ Order Service
+- ⏳ Payment Service
+- ⏳ Notification Service
+
+## Infrastructure
+
 - ⏳ Redis Integration
 - ⏳ Kafka Event Streaming
-- ⏳ Docker & Kubernetes
+- ⏳ Distributed Tracing
+- ⏳ API Rate Limiting
+- ⏳ Circuit Breaker
+- ⏳ Resilience4j
+- ⏳ Docker
+- ⏳ Kubernetes
 - ⏳ CI/CD Pipeline
 - ⏳ Monitoring & Observability
 - ⏳ AWS Deployment
 
 ---
 
-## 🎯 Engineering Principles
+# 🎯 Engineering Principles
+
+The project follows enterprise software engineering best practices.
 
 - Clean Architecture
 - SOLID Principles
 - Separation of Concerns
+- Domain-Driven Modular Design
 - Stateless Authentication
-- Enterprise Exception Handling
+- Database Schema Versioning
 - Reusable Shared Libraries
+- Enterprise Exception Handling
+- Centralized Configuration
 - Production-Oriented Design
+- Secure Coding Practices
 - Sprint-Based Development
-- Code Reviews & Refactoring
+- Code Reviews
+- Continuous Refactoring
+- Maintainable & Scalable Codebase
 
 ---
 
-## 👨‍💻 Author
+# 📁 Project Structure
 
-**Tarique Hayat**
+```
+enterprise-ecommerce/
 
-Backend Engineer | Java | Spring Boot | Microservices | DevOps | Software Architecture
+├── api-gateway
+├── auth-service
+├── user-service
+├── config-server
+├── discovery-server
+├── shared-security-starter
+└── pom.xml
+```
+
+---
+
+# 🚀 Future Enhancements
+
+- Event-Driven Architecture using Kafka
+- Redis Caching
+- Distributed Logging
+- OpenTelemetry Tracing
+- Prometheus & Grafana Monitoring
+- ELK Stack
+- Docker Compose
+- Kubernetes Deployment
+- GitHub Actions CI/CD
+- AWS Deployment
+- Performance Optimization
+- Integration Testing
+- Load Testing
+- Production Hardening
+
+---
+
+# 👨‍💻 Author
+
+## Tarique Hayat
+
+**Backend Engineer**
+
+**Java • Spring Boot • Spring Cloud • Microservices • PostgreSQL • Flyway • Spring Security • DevOps • Software Architecture**
 
 > *Building enterprise-grade backend systems one sprint at a time.*

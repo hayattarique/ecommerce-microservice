@@ -17,6 +17,7 @@ public class RoleEntity extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String name;
     private String description;
+    private boolean active = true;
     @OneToMany(mappedBy = "role")
     private Set<RolePermissionEntity> permissions;
 

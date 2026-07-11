@@ -35,7 +35,7 @@ public abstract class BaseEntity {
     protected LocalDateTime updatedAt;
 
     @Version
-    protected Long version;
+    protected Integer version;
 
 
 }

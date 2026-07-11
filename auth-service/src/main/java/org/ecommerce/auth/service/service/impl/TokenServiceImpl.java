@@ -105,7 +105,7 @@ public class TokenServiceImpl implements TokenService {
         refreshTokenEntity.setToken(jwtTokenGenerator.generateRefreshToken(user));
         refreshTokenEntity.setExpiredAt(LocalDateTime.now().plusDays(7)); // Set expiration to 7 days from now
         // just fetch reference it won't fire query
-        UserCredentialEntity reference = credentialRepository.getReferenceById(user.getUserId());
+        UserCredentialEntity reference = credentialRepository.getReferenceById(user.getId());
         refreshTokenEntity.setUserCredential(reference);
         return refreshTokenEntity;
     }

@@ -4,7 +4,6 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.ecommerce.auth.service.jwt.JwtTokenGenerator;
 import org.ecommerce.utility.security.config.JWTPropertiesConfig;
-import org.ecommerce.utility.security.constants.JwtClaimConstants;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.ecommerce.utility.security.utils.TokenType;
 import org.springframework.stereotype.Component;
@@ -37,7 +36,8 @@ public class JwtTokenGeneratorImpl implements JwtTokenGenerator {
 
         if (tokenType == TokenType.REFRESH_TOKEN) {
             return Jwts.builder()
-                    .subject(authenticatedUser.getUserId().toString())
+                    .subject(authenticatedUser.getId().toString())
+                    .claim(USER_ACCOUNT_ID, authenticatedUser.getUserAccountId())
                     .claim(EMAIL, authenticatedUser.getEmail())
                     .claim(TOKEN_TYPE, tokenType)
                     .issuedAt(new Date())
@@ -45,7 +45,8 @@ public class JwtTokenGeneratorImpl implements JwtTokenGenerator {
                     .signWith(secretKey).compact();
         }
         return Jwts.builder()
-                .subject(authenticatedUser.getUserId().toString())
+                .subject(authenticatedUser.getId().toString())
+                .claim(USER_ACCOUNT_ID, authenticatedUser.getUserAccountId())
                 .claim(EMAIL, authenticatedUser.getEmail())
                 .claim(ROLES, authenticatedUser.getRoles())
                 .claim(PERMISSIONS, authenticatedUser.getPermissions())
