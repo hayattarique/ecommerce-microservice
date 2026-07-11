@@ -22,9 +22,6 @@ public class UserCredentialEntity extends BaseEntity {
     @Column(name = "user_account_id", nullable = false,unique = true)
     private Long userAccountId; // userAccountId from user-management-service
     private String password;
-    private LocalDateTime lockedExpiryAt;
-    private String lastLoginIpAddress;
-    private LocalDateTime lastLoginAt;
     private boolean active = true;
     @OneToMany(mappedBy = "userCredential", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RefreshTokenEntity> refreshTokens;
@@ -34,9 +31,5 @@ public class UserCredentialEntity extends BaseEntity {
         refreshTokenEntity.setUserCredential(this);
     }
 
-    @PreUpdate
-    public void prePersist() {
-        lastLoginAt = LocalDateTime.now();
-    }
 
 }
