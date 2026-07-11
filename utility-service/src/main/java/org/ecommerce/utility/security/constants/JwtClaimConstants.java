@@ -11,7 +11,7 @@ public class JwtClaimConstants {
 
     public static final String EMAIL = "email";
 
-    public static final String USERNAME = "username";
+    public static final String USER_ACCOUNT_ID = "userAccountId";
 
     public static final String ROLES = "roles";
 

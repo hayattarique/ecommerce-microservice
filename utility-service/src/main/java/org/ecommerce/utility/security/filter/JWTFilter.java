@@ -52,7 +52,7 @@ public class JWTFilter extends OncePerRequestFilter {
                     throw new JwtException(SecurityErrorCode.INVALID_TOKEN_TYPE);
                 }
                 AuthenticatedUser userDetails = jwtClaimExtractor.extractAuthenticatedUser(claims);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }

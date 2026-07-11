@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.ecommerce.utility.security.constants.JwtClaimConstants.EMAIL;
+import static org.ecommerce.utility.security.constants.JwtClaimConstants.USER_ACCOUNT_ID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,10 +40,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AuthenticationDto authenticate(AuthenticationRequest request) {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         if (authenticate.getPrincipal() instanceof AuthenticatedUser authenticationDetails) {
-            tokenService.revokeAllRefreshTokensForUser(authenticationDetails.getUserId());
+            tokenService.revokeAllRefreshTokensForUser(authenticationDetails.getId());
             String accessToken = tokenService.generateAccessToken(authenticationDetails);
             String refreshToken = tokenService.generateRefreshToken(authenticationDetails);
-            return new AuthenticationDto(authenticationDetails.getUserId(), accessToken, refreshToken);
+            return new AuthenticationDto(authenticationDetails.getId(), accessToken, refreshToken);
         }
         throw new AuthenticationException(AuthErrorCode.INVALID_CREDENTIALS);
     }
@@ -61,7 +62,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             // step 4: create authenticated user object
             AuthenticatedUser authenticatedUser = AuthenticatedUser.builder()
-                    .userId(user.getUserAccountId())
+                    .id(claims.get(USER_ACCOUNT_ID, Long.class))
+                    .userAccountId(user.getUserAccountId())
                     .email(user.getEmail())
                     .roles(user.getRoles())
                     .permissions(user.getPermissions())
@@ -72,7 +74,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             // step 6: generate access token
             String accessToken = tokenService.generateAccessToken(authenticatedUser);
-            return new AuthenticationDto(authenticatedUser.getUserId(), accessToken, refreshToken);
+            return new AuthenticationDto(authenticatedUser.getId(), accessToken, refreshToken);
         }
         throw new AuthenticationException(AuthErrorCode.INVALID_REFRESH_TOKEN);
     }

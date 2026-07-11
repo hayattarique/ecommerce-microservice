@@ -13,7 +13,7 @@ public class JwtClaimExtractorServiceImpl implements JwtClaimExtractorService {
 
 
         return AuthenticatedUser.builder()
-                .userId(claims.get(JwtClaimConstants.USER_ID, Long.class))
+                .id(claims.get(JwtClaimConstants.USER_ID, Long.class))
                 .email(claims.get(JwtClaimConstants.EMAIL, String.class))
                 .roles(extractRolesFromClaims(claims))
                 .permissions(extractPermissionsFromClaims(claims))
