@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AuthenticatedUser implements UserDetails {
 
-    private Long userId;
+    private Long id;
 
     private Long userAccountId;
 
