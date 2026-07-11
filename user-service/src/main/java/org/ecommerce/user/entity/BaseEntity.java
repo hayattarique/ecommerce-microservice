@@ -33,4 +33,6 @@ public abstract class BaseEntity {
 
     protected LocalDateTime deletedAt;
 
+    protected Integer version;
+
 }

@@ -1,11 +1,9 @@
 package org.ecommerce.user.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.ecommerce.user.utils.Gender;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -19,9 +17,8 @@ public class UserEntity extends BaseEntity {
     private String email;
     private String firstName;
     private String lastName;
-    @Column(unique = true)
-    private String displayName;
-    private String gender;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
     @Column(unique = true)
     private String mobile;
     private boolean active = true;
