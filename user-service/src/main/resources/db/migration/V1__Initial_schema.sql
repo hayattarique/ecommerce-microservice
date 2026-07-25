@@ -105,7 +105,7 @@ CREATE TABLE role_permissions
 
     CONSTRAINT uk_role_permission UNIQUE (role_id, permission_id),
 
-    CONSTRAINT fk_role_permissions_role
+       fk_role_permissions_role
         FOREIGN KEY (role_id)
             REFERENCES roles (id),
 
