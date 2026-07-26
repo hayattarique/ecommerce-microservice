@@ -2,14 +2,14 @@ package org.ecommerce.gateway.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.ecommerce.gateway.config.JWTPropertiesConfig;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.function.Function;
 
 @Component
@@ -33,8 +33,7 @@ public class JwtUtils {
     }
 
     private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretKey());
-        return Keys.hmacShaKeyFor(keyBytes);
+        return Keys.hmacShaKeyFor(jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8));
     }
 
     private Date extractExpiration(String token) {

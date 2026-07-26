@@ -17,7 +17,6 @@ import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @AutoConfiguration
 @ConditionalOnClass(JWTFilter.class)
@@ -53,6 +52,7 @@ public class SecurityAutoConfig {
 
         return new JWTFilter(validator, extractor);
     }
+
     @Bean
     JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint(ObjectMapper objectMapper) {
         return new JwtAuthenticationEntryPoint(objectMapper);

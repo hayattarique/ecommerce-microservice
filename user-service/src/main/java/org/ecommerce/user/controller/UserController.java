@@ -28,11 +28,6 @@ public class UserController {
 
     }
 
-    @GetMapping(UserMappingConstant.GET_USER_BY_EMAIL)
-    public ResponseEntity<ApiResponse<Object>> login(@PathVariable String email) {
-        log.info("Received login request for user: {}", email);
-        return ResponseEntity.ok(ApiResponse.success(userService.getUserByEmail(email), "User retrieved successfully"));
-    }
 
     @PutMapping(UserMappingConstant.ASSIGN_ROLE_BY_ID)
     @PreAuthorize("hasRole('ADMIN')")

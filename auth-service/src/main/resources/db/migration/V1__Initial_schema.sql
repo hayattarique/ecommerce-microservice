@@ -1,7 +1,6 @@
 CREATE TABLE user_credentials
 (
     id         BIGSERIAL PRIMARY KEY,
-    username   VARCHAR(255) NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
     user_account_id BIGINT       NOT NULL,
     created_at TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
