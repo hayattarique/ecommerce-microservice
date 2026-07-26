@@ -22,7 +22,8 @@ CREATE TABLE users
     updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by    VARCHAR(255) NOT NULL,
     updated_by    VARCHAR(255) NOT NULL,
-    version       INT          NOT NULL DEFAULT 0
+    version       INT          NOT NULL DEFAULT 0,
+deleted_at TIMESTAMP
 );
 
 CREATE TABLE roles
@@ -40,7 +41,9 @@ CREATE TABLE roles
     updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by  VARCHAR(255) NOT NULL,
     updated_by  VARCHAR(255) NOT NULL,
-    version     INT          NOT NULL DEFAULT 0
+    version     INT          NOT NULL DEFAULT 0,
+deleted_at TIMESTAMP
+
 );
 
 CREATE TABLE permissions
@@ -58,7 +61,9 @@ CREATE TABLE permissions
     updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by  VARCHAR(255) NOT NULL,
     updated_by  VARCHAR(255) NOT NULL,
-    version     INT          NOT NULL DEFAULT 0
+    version     INT          NOT NULL DEFAULT 0,
+deleted_at TIMESTAMP
+
 );
 
 CREATE TABLE user_roles
@@ -84,7 +89,9 @@ CREATE TABLE user_roles
     CONSTRAINT fk_user_roles_role
         FOREIGN KEY (role_id)
             REFERENCES roles (id),
-    version    INT          NOT NULL DEFAULT 0
+    version    INT          NOT NULL DEFAULT 0,
+deleted_at TIMESTAMP
+
 
 
 );
@@ -105,12 +112,14 @@ CREATE TABLE role_permissions
 
     CONSTRAINT uk_role_permission UNIQUE (role_id, permission_id),
 
-       fk_role_permissions_role
+    CONSTRAINT  fk_role_permissions_role
         FOREIGN KEY (role_id)
             REFERENCES roles (id),
 
     CONSTRAINT fk_role_permissions_permission
         FOREIGN KEY (permission_id)
             REFERENCES permissions (id),
-    version       INT          NOT NULL DEFAULT 0
+    version       INT          NOT NULL DEFAULT 0,
+deleted_at TIMESTAMP
+
 );

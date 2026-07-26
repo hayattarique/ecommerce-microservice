@@ -25,13 +25,16 @@ public enum SecurityErrorCode implements ErrorCode {
             "SEC-003",
             "Invalid token type",
             HttpStatus.UNAUTHORIZED
+    ),
+    INVALID_API_KEY(
+            "SEC-004",
+            "Invalid api key"
+            , HttpStatus.UNAUTHORIZED
     );
 
     private final String code;
     private final String message;
     private final HttpStatus httpStatus;
-
-
 
 
 }
