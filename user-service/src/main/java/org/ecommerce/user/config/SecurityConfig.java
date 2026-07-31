@@ -110,7 +110,7 @@ public class SecurityConfig {
                     .errorCode(invalidApiKey.getCode()).message(invalidApiKey.getMessage())
                     .path(requestURI).timestamp(LocalDateTime.now()).build();
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             objectMapper.writeValue(response.getOutputStream(), errorResponse);
         }
     }
