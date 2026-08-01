@@ -48,9 +48,10 @@ public class SecurityAutoConfig {
     @ConditionalOnMissingBean
     JWTFilter jwtFilter(
             JwtTokenValidatorService validator,
-            JwtClaimExtractorService extractor) {
+            JwtClaimExtractorService extractor,
+            JwtAuthenticationEntryPoint entryPoint) {
 
-        return new JWTFilter(validator, extractor);
+        return new JWTFilter(validator, extractor,entryPoint);
     }
 
     @Bean
