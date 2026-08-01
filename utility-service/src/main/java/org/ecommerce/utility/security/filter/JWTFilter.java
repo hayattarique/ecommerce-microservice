@@ -1,6 +1,7 @@
 package org.ecommerce.utility.security.filter;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,6 +30,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
     private final JwtTokenValidatorService jwtTokenValidator;
     private final JwtClaimExtractorService jwtClaimExtractor;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
 
     @Override
@@ -42,28 +44,36 @@ public class JWTFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
         String token = header.substring(SecurityConstants.AUTHORIZATION_HEADER_PREFIX.length());
-        // step 2 validate token
-        try {
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                Claims claims = jwtTokenValidator.validateTokenAndGetClaims(token);
-                if (TokenType.valueOf(claims.get(JwtClaimConstants.TOKEN_TYPE, String.class)) == TokenType.REFRESH_TOKEN) {
-                    throw new JwtException(SecurityErrorCode.INVALID_TOKEN_TYPE);
-                }
-                AuthenticatedUser userDetails = jwtClaimExtractor.extractAuthenticatedUser(claims);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            // step 2 validate token
+            Claims claims;
+            try {
+                claims = jwtTokenValidator.validateTokenAndGetClaims(token);
+            } catch (ExpiredJwtException e) {
+                reject(request, response, SecurityErrorCode.TOKEN_EXPIRED);
+                return;
+            } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
+                reject(request, response, SecurityErrorCode.INVALID_TOKEN);
+                return;
             }
+            if (TokenType.REFRESH_TOKEN.name().equals(claims.get(JwtClaimConstants.TOKEN_TYPE, String.class))) {
+                reject(request, response, SecurityErrorCode.INVALID_TOKEN_TYPE);
+                return;
+            }
+            AuthenticatedUser authenticatedUser = jwtClaimExtractor.extractAuthenticatedUser(claims);
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(authenticatedUser, token, authenticatedUser.getAuthorities());
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-
-        } catch (JwtException e) {
-            log.error("Error occurred while processing JWT token", e);
-            SecurityContextHolder.clearContext();
-            throw new JwtException(SecurityErrorCode.TOKEN_EXPIRED);
         }
         filterChain.doFilter(request, response);
+    }
 
+    private void reject(HttpServletRequest request, HttpServletResponse response, SecurityErrorCode errorCode) throws IOException {
+        log.warn("JWT rejected [{}] for {} {}", errorCode.getCode(), request.getMethod(), request.getRequestURI());
+        SecurityContextHolder.clearContext();
+        jwtAuthenticationEntryPoint.commence(request, response, new JwtException(errorCode));
     }
 }

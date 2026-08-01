@@ -6,7 +6,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Parent -->
     <parent>
         <groupId>org.ecommerce.parent</groupId>
         <artifactId>ecommerce-parent</artifactId>
@@ -73,6 +72,11 @@
             <artifactId>reactor-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
 
     </dependencies>
 

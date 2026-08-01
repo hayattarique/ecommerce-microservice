@@ -8,7 +8,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface UserCredentialRepository extends JpaRepository<UserCredentialEntity, Long> {
-    @Query("FROM UserCredentialEntity u where u.userAccountId=:userAccountId")
+
+    @Query("FROM UserCredentialEntity u where u.userAccountId=:userAccountId and u.active=true")
     Optional<UserCredentialEntity> findByUserAccountIdAndActiveIsTrue(@Param("userAccountId") Long userAccountId);
 
 }
