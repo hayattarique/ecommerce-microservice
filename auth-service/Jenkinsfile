@@ -11,10 +11,21 @@ pipeline {
     }
 
     stages {
-        stage('debug') {
-            steps {
-                sh 'pwd && ls -la'
-            }
+
+        stage('build utility-service') {
+           dir('utility-service'){
+           steps{
+           sh 'mvn clean install'
+           }
+           }
         }
+
+        stage('test') {
+        dir('auth-service'){
+            steps {
+         sh 'mvn clean test'
+        }
+        }
+    }
     }
 }
