@@ -41,11 +41,16 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final ObjectMapper objectMapper;
     private final JWTPropertiesConfig jwtProperties;
+    // "/actuator/health/**" is open so the Jenkins pipeline can poll it after a
+    // deploy without holding a JWT. Only the health endpoint is exposed
+    // (management.endpoints.web.exposure.include), so nothing else is reachable.
     private static final String[] WHITE_LIST = {
             "/api/v1/user/**",
             "/api/v1/users/refresh-token",
             "/api/v1/users/verify-email",
             "/api/v1/users/reset-password",
+            "/actuator/health",
+            "/actuator/health/**",
     };
     private static final String INTERNAL = "/api/v1/internal/**" ;
 
