@@ -39,9 +39,6 @@ pipeline {
             }
         }
 
-        // Kills the jar left over from the previous build.
-        // '|| true' keeps the build green on the very first run,
-        // when there is nothing to kill.
         stage('Stop old instance') {
             steps {
                 // Polite shutdown first, so Spring Boot deregisters from Eureka
