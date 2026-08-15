@@ -1,0 +1,22 @@
+pipeline {
+    agent any
+
+    options  {
+  disableConcurrentBuilds()
+         timestamps()
+}
+environment {
+ MODULE= 'auth-service'
+}
+
+    stages {
+stage('debug') {
+    steps {
+        sh 'pwd && ls -la'
+    }
+}
+}
+
+    }
+
+}
