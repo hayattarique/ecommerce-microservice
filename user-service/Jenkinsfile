@@ -81,19 +81,26 @@ pipeline {
             steps {
                 sh '''
                     JENKINS_NODE_COOKIE=dontKillMe nohup java -jar $WORKSPACE/$MODULE/target/*.jar --spring.profiles.active=$PROFILE --server.port=$APP_PORT > /tmp/$MODULE.log 2>&1 &
-                    sleep 30
-                    tail -n 40 /tmp/$MODULE.log
+                    sleep 5
+                    tail -n 20 /tmp/$MODULE.log
                 '''
-                // Fails the build if the JVM died during startup, instead of
-                // reporting a false success.
-                sh 'pgrep -f "$MODULE/target"'
+            }
+        }
+
+        // curl retries for 60s (12 x 5s) while the port is still closed and
+        // while health returns 503 (DOWN), so this passes as soon as the service
+        // reports UP and fails the build with the app log otherwise.
+        stage('Health check') {
+            steps {
+                sh 'curl -sf --retry 12 --retry-delay 5 --retry-connrefused http://localhost:$APP_PORT/actuator/health || { tail -n 100 /tmp/$MODULE.log; exit 1; }'
+                echo 'HEALTH CHECKED PASSED!'
             }
         }
     }
 
     post {
         success {
-            echo "${MODULE} deployed on port ${APP_PORT} (profile: ${PROFILE})"
+            echo "${MODULE} deployed and healthy on port ${APP_PORT} (profile: ${PROFILE}) -- http://localhost:${APP_PORT}/actuator/health"
         }
     }
 }
