@@ -19,9 +19,7 @@
             <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
         </dependency>
 
-        <!-- Actuator: exposes /actuator/health, polled by the Jenkins pipeline.
-             The eureka-server starter already pulls it in transitively -- declared
-             explicitly so the health check does not depend on that staying true. -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
