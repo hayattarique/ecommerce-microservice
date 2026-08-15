@@ -1,0 +1,4 @@
+# The Jenkinsfiles contain multi-line sh blocks that Jenkins writes out as a
+# shell script on the Linux agent. If they were committed with CRLF endings,
+# every command would arrive with a trailing \r and fail. Force LF.
+Jenkinsfile text eol=lf
