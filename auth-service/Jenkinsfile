@@ -12,20 +12,20 @@ pipeline {
 
     stages {
 
-        stage('build utility-service') {
-           dir('utility-service'){
-           steps{
-           sh 'mvn clean install'
-           }
-           }
+        stage('Build utility-service') {
+            steps {
+                dir('utility-service') {
+                    sh 'mvn clean install'
+                }
+            }
         }
 
-        stage('test') {
-        dir('auth-service'){
+        stage('Test') {
             steps {
-         sh 'mvn clean test'
+                dir("${MODULE}") {
+                    sh 'mvn clean test'
+                }
+            }
         }
-        }
-    }
     }
 }
