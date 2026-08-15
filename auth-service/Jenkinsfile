@@ -15,6 +15,19 @@ pipeline {
 
     stages {
 
+        // Must run FIRST. utility-service builds without this (its <parent> has
+        // a <relativePath> pointing at the file on disk), but auth-service then
+        // resolves utility-service as a dependency *from the repository*, and
+        // reading that POM needs ecommerce-parent from the repository too --
+        // where relativePath does not apply. -N = this POM only, no modules.
+        stage('Install parent POM') {
+            steps {
+                dir('ecommerce-parent') {
+                    sh 'mvn -B -N clean install'
+                }
+            }
+        }
+
         stage('Build utility-service') {
             steps {
                 dir('utility-service') {
