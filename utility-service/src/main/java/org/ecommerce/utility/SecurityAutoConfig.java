@@ -12,19 +12,25 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.SecurityFilterChain;
 import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 
-@AutoConfiguration
-@ConditionalOnClass(JWTFilter.class)
+
+@AutoConfiguration(before = UserDetailsServiceAutoConfiguration.class)
+@ConditionalOnClass(SecurityFilterChain.class)
 @EnableConfigurationProperties(JWTPropertiesConfig.class)
 public class SecurityAutoConfig {
 
 
     @Bean
+    @ConditionalOnMissingBean
     SecretKey secretKey(JWTPropertiesConfig jwtPropertiesConfig) {
         return Keys.hmacShaKeyFor(jwtPropertiesConfig.getSecretKey()
                 .getBytes(StandardCharsets.UTF_8));
@@ -55,7 +61,17 @@ public class SecurityAutoConfig {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint(ObjectMapper objectMapper) {
         return new JwtAuthenticationEntryPoint(objectMapper);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(UserDetailsService.class)
+    UserDetailsService jwtOnlyUserDetailsService() {
+        return username -> {
+            throw new UsernameNotFoundException(
+                    "No local user store -- this service authenticates by JWT only");
+        };
     }
 }
