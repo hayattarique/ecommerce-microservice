@@ -9,18 +9,13 @@ pipeline {
 
     environment {
         MODULE   = 'config-server'
-        // config-server sets no server.port (would default to 8080).
-        // Pinned here to the Spring Cloud Config convention -- change if needed.
         APP_PORT = '8888'
-        // Its application.properties needs profile 'native' for the
-        // filesystem-backed config repo, so not 'dev' like the others.
         PROFILE  = 'native'
     }
 
     stages {
 
-        // config-server inherits straight from spring-boot-starter-parent, so it
-        // needs neither utility-service nor ecommerce-parent built first.
+
         stage('Test') {
             steps {
                 dir("${MODULE}") {
@@ -40,12 +35,10 @@ pipeline {
 
         stage('Stop old instance') {
             steps {
-                // Polite shutdown first, so Spring Boot deregisters from Eureka
-                // and closes the DB pool cleanly.
+
                 sh 'pkill -f "$MODULE/target" || true'
                 sh 'sleep 15'
-                // Force anything that ignored it -- otherwise the port stays
-                // occupied and the new instance cannot bind.
+
                 sh 'pkill -9 -f "$MODULE/target" || true'
                 sh 'sleep 3'
             }

@@ -11,6 +11,7 @@ pipeline {
         MODULE   = 'auth-service'
         APP_PORT = '9091'
         PROFILE  = 'dev'
+        UTILITY_SERVICE = 'utility-service'
     }
 
     stages {
@@ -26,7 +27,7 @@ pipeline {
 
         stage('Build utility-service') {
             steps {
-                dir('utility-service') {
+                dir("${UTILITY_SERVICE}") {
                     sh 'mvn -B clean install -DskipTests'
                 }
             }
