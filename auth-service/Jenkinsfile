@@ -13,10 +13,6 @@ pipeline {
         PROFILE  = 'dev'
     }
 
-        triggers {
-            githubPush()
-        }
-
     stages {
 
 
