@@ -13,6 +13,10 @@ pipeline {
         PROFILE  = 'dev'
     }
 
+        triggers {
+            githubPush()
+        }
+
     stages {
 
         // Must run FIRST. utility-service builds without this (its <parent> has
