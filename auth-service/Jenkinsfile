@@ -52,9 +52,7 @@ pipeline {
             }
         }
 
-        // Kills the jar left over from the previous build.
-        // '|| true' keeps the build green on the very first run,
-        // when there is nothing to kill.
+
         stage('Stop old instance') {
             steps {
                 // Polite shutdown first, so Spring Boot deregisters from Eureka
@@ -78,9 +76,6 @@ pipeline {
             }
         }
 
-        // curl retries for 60s (12 x 5s) while the port is still closed and
-        // while health returns 503 (DOWN), so this passes as soon as the service
-        // reports UP and fails the build with the app log otherwise.
         stage('Health check') {
             steps {
                 sh 'curl -sf --retry 12 --retry-delay 5 --retry-connrefused http://localhost:$APP_PORT/actuator/health || { tail -n 100 /tmp/$MODULE.log; exit 1; }'
