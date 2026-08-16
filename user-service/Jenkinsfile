@@ -4,16 +4,7 @@ pipeline {
     options {
         disableConcurrentBuilds()
         timestamps()
-        buildDiscarder(logRotator(numToKeepStr: '15'))
-    }
-
-    // Makes this job respond to the GitHub push webhook. Without this the
-    // webhook is delivered, Jenkins finds no job subscribed to it, and nothing
-    // happens. Equivalent to ticking "GitHub hook trigger for GITScm polling"
-    // in the job config. NOTE: run this job manually once after adding it --
-    // Jenkins only registers the trigger after it has read the Jenkinsfile.
-    triggers {
-        githubPush()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
     }
 
     environment {
@@ -24,11 +15,6 @@ pipeline {
 
     stages {
 
-        // Must run FIRST. utility-service builds without this (its <parent> has
-        // a <relativePath> pointing at the file on disk), but user-service then
-        // resolves utility-service as a dependency *from the repository*, and
-        // reading that POM needs ecommerce-parent from the repository too --
-        // where relativePath does not apply. -N = this POM only, no modules.
         stage('Install parent POM') {
             steps {
                 dir('ecommerce-parent') {
@@ -61,17 +47,11 @@ pipeline {
             }
         }
 
-        // Kills the jar left over from the previous build.
-        // '|| true' keeps the build green on the very first run,
-        // when there is nothing to kill.
         stage('Stop old instance') {
             steps {
-                // Polite shutdown first, so Spring Boot deregisters from Eureka
-                // and closes the DB pool cleanly.
                 sh 'pkill -f "$MODULE/target" || true'
                 sh 'sleep 15'
                 // Force anything that ignored it -- otherwise the port stays
-                // occupied and the new instance cannot bind.
                 sh 'pkill -9 -f "$MODULE/target" || true'
                 sh 'sleep 3'
             }
@@ -87,9 +67,7 @@ pipeline {
             }
         }
 
-        // curl retries for 60s (12 x 5s) while the port is still closed and
-        // while health returns 503 (DOWN), so this passes as soon as the service
-        // reports UP and fails the build with the app log otherwise.
+
         stage('Health check') {
             steps {
                 sh 'curl -sf --retry 12 --retry-delay 5 --retry-connrefused http://localhost:$APP_PORT/actuator/health || { tail -n 100 /tmp/$MODULE.log; exit 1; }'

@@ -140,10 +140,8 @@ requiring re-login.
 
 ### 1. Create the databases
 
-Names contain a hyphen, so they must be quoted:
-
 ```bash
-psql -U postgres -c 'CREATE DATABASE "auth-service"; CREATE DATABASE "user-service";'
+psql -U postgres -c 'CREATE DATABASE auth_service; CREATE DATABASE user_service;'
 ```
 
 Don't create tables — Flyway builds the schema on first startup.
@@ -167,8 +165,11 @@ mvn -f ecommerce-parent/pom.xml clean install
 | 4 | `gateway` | 9999 | Last, so routes resolve immediately |
 
 ```bash
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
+
+The `local` profile is the one that points at `localhost:5432` — the databases you just created.
+The default profile is `dev`, which targets a remote instance.
 
 ### 4. Try it
 
@@ -295,8 +296,9 @@ versioned, reviewed, and diffed like any other source file.
 
 ### Change one service, redeploy one service
 
-A GitHub webhook notifies Jenkins on every push; `triggers { githubPush() }` is what subscribes a job
-to it. Each job is then **scoped to its own module path**, so a commit that touches `auth-service`
+A GitHub webhook notifies Jenkins on every push, and each job subscribes to it through **GitHub hook
+trigger for GITScm polling** in its own configuration. Each job is then **scoped to its own module
+path**, so a commit that touches `auth-service`
 rebuilds and redeploys `auth-service` alone — the other four instances keep serving traffic, never
 restart, and never appear in the build history for that change.
 

@@ -7,15 +7,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '15'))
     }
 
-    // Makes this job respond to the GitHub push webhook. Without this the
-    // webhook is delivered, Jenkins finds no job subscribed to it, and nothing
-    // happens. Equivalent to ticking "GitHub hook trigger for GITScm polling"
-    // in the job config. NOTE: run this job manually once after adding it --
-    // Jenkins only registers the trigger after it has read the Jenkinsfile.
-    triggers {
-        githubPush()
-    }
-
     environment {
         MODULE   = 'auth-service'
         APP_PORT = '9091'
