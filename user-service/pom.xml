@@ -118,6 +118,12 @@
             <artifactId>spring-boot-flyway</artifactId>
         </dependency>
 
+        <!-- Distributed Tracing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-opentelemetry</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
