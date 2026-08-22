@@ -9,6 +9,8 @@
 ![Maven](https://img.shields.io/badge/Maven-multi--module-C71A36?style=flat-square&logo=apachemaven&logoColor=white)
 ![Jenkins](https://img.shields.io/badge/Jenkins-CI%2FCD-D24939?style=flat-square&logo=jenkins&logoColor=white)
 ![Actuator](https://img.shields.io/badge/Actuator-health--gated%20deploys-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-tracing-425CC7?style=flat-square&logo=opentelemetry&logoColor=white)
+![Jaeger](https://img.shields.io/badge/Jaeger-2.20.0-60D0E4?style=flat-square&logo=jaeger&logoColor=white)
 
 > A distributed e-commerce backend built with **Java 21**, **Spring Boot 4**, and **Spring Cloud** —
 > engineered the way backend systems are built in professional teams: modular services, a reusable
@@ -43,6 +45,10 @@ graph TB
         USERDB[("PostgreSQL<br/>user-service")]
     end
 
+    subgraph Observability
+        JAEGER["🔭 Jaeger<br/>:16686<br/>OTLP traces"]
+    end
+
     Client -->|Bearer JWT| GW
     GW -->|lb://AUTH-SERVICE| AUTH
     GW -->|lb://USER-SERVICE| USER
@@ -53,6 +59,10 @@ graph TB
     AUTH -.-> EUREKA
     USER -.-> EUREKA
     GW -.-> EUREKA
+
+    GW -.->|OTLP| JAEGER
+    AUTH -.-> JAEGER
+    USER -.-> JAEGER
 ```
 
 **Database per service.** No shared tables, no cross-service foreign keys — services are linked by
@@ -95,6 +105,8 @@ A request that reaches a service directly — bypassing the edge — is still fu
 | **API documentation** | springdoc OpenAPI on both business services |
 | **CI/CD** | One Jenkins pipeline per service, defined by a `Jenkinsfile` beside the code it builds — test → package → graceful restart → health gate |
 | **Health-gated deploys** | Spring Boot Actuator `/actuator/health` is polled after every deploy; a service that never reports `UP` fails the build instead of quietly staying broken |
+| **Distributed tracing** | OpenTelemetry via `spring-boot-starter-opentelemetry` — every hop of a request exported over OTLP and viewable as a single trace in Jaeger |
+| **Trace-correlated logs** | Log4j2 correlation pattern — every line carries `[service, traceId, spanId]`, so a log line leads straight back to its trace |
 
 ---
 
@@ -192,6 +204,16 @@ curl -X POST http://localhost:9091/api/v1/auth/login -H "Content-Type: applicati
 
 **Swagger UI** — http://localhost:9091/swagger-ui.html · http://localhost:9092/swagger-ui.html
 
+### 5. Watch the request trace itself
+
+```bash
+docker compose up -d
+```
+
+Replay the login call above, then open **http://localhost:16686** — it appears as one trace across
+gateway → auth-service → user-service. See [Distributed Tracing](#-distributed-tracing) for what is
+and is not instrumented.
+
 ---
 
 ## 📡 API
@@ -248,6 +270,9 @@ Direct ports shown; via the gateway, prefix with `/auth-service` or `/user-servi
 | Build | Maven (multi-module) | — |
 | CI/CD | Jenkins — declarative pipeline per service | — |
 | Health checks | Spring Boot Actuator | 4.1.0 |
+| Tracing | OpenTelemetry via Micrometer Tracing | — |
+| Trace UI | Jaeger — OTLP/HTTP ingest | 2.20.0 |
+| Logging | Log4j2 — replaces Logback | — |
 
 ---
 
@@ -262,6 +287,7 @@ ecommerce-microservices/
 ├── auth-service/          Credentials, JWT issuance            :9091
 ├── user-service/          Profiles, roles, permissions         :9092
 ├── config-server/         Spring Cloud Config (scaffolded)     :8080
+├── docker-compose.yml     Jaeger — local tracing backend
 └── docs/                  Engineering documentation
 ```
 
@@ -374,6 +400,101 @@ Only the health endpoint is exposed —
 
 ---
 
+## 🔭 Distributed Tracing
+
+A single login touches three services: the gateway routes it, `auth-service` authenticates, and
+`auth-service` calls `user-service` for roles and permissions. That used to produce three unrelated
+log streams and no way to answer *which* hop was slow. It now produces **one trace**, and every log
+line involved carries the id that leads back to it.
+
+**Start the backend** — Jaeger runs from the repo root:
+
+```bash
+docker compose up -d
+```
+
+UI at **http://localhost:16686**. It accepts OTLP/HTTP on `:4318`, which is exactly where the
+services export.
+
+### What is instrumented
+
+`spring-boot-starter-opentelemetry` is on `gateway`, `auth-service`, and `user-service`. Micrometer
+Observation creates the spans; the OpenTelemetry bridge exports them over OTLP.
+
+| Hop | Where the span comes from |
+|---|---|
+| Client → gateway | Server-side observation on the reactive edge |
+| Gateway → `lb://AUTH-SERVICE` | Gateway routing filter, context forwarded downstream |
+| `auth-service` → `user-service` | `WebClient` client observation — see the gotcha below |
+| Request arriving at any service | Server-side observation, one per service |
+
+Context travels as the **W3C `traceparent` header**, so no service passes trace ids by hand.
+
+Database calls are **not** spans yet — that needs `datasource-micrometer-spring-boot`. A slow query
+currently shows up as unexplained time inside the enclosing service span.
+
+### Configuration
+
+Identical in all three services apart from the name:
+
+| Property | Value | Why |
+|---|---|---|
+| `management.tracing.sampling.probability` | `1.0` | Sample every request. Right for development, far too expensive for production traffic |
+| `management.opentelemetry.resource-attributes.service.name` | `AUTH-SERVICE`, … | The name the service appears under in Jaeger |
+| `management.opentelemetry.tracing.export.otlp.endpoint` | `http://localhost:4318/v1/traces` | Jaeger's OTLP/HTTP ingest |
+| `management.otlp.metrics.export.enabled` | `false` | The starter also pulls `micrometer-registry-otlp`, which would POST metrics to `/v1/metrics` — an endpoint Jaeger does not serve. Left enabled, it retries and logs errors forever |
+| `logging.pattern.correlation` | `[${spring.application.name:-},%X{traceId:-},%X{spanId:-}] ` | Puts the ids into every log line |
+
+### Logs carry the trace id
+
+The services run on **Log4j2** rather than Logback. `spring-boot-starter-logging` is excluded once in
+`ecommerce-parent` and `spring-boot-starter-log4j2` declared there in its place, so all four reactor
+modules inherit it; classes use Lombok's `@Log4j2`.
+
+> A per-starter `<exclusion>` would not have been enough — nearly every Boot starter pulls
+> `spring-boot-starter` transitively, so Logback comes back through whichever one you missed. The
+> exclusion is declared in `<dependencyManagement>`, where it applies to every resolution path at
+> once.
+
+Boot's console pattern leaves a slot for correlation ids, and `logging.pattern.correlation` fills it
+with `[service, traceId, spanId]`:
+
+```
+2026-08-22T14:27:32.593+05:30  INFO 18608 --- [AUTH-SERVICE] [nio-9091-exec-1] [AUTH-SERVICE,4bf92f3577b34da6,00f067aa0ba902b7] o.e.a.s.s.i.AuthenticationServiceImpl : Login successful
+```
+
+Paste that trace id into Jaeger's search box and the whole request comes back. Outside a request —
+during startup, for instance — the two id slots are simply empty: `[AUTH-SERVICE,,]`.
+
+### The gotcha: a hand-built `WebClient` silently ends the trace
+
+`auth-service` declares its own `WebClient.Builder` bean, because it needs a `@LoadBalanced` builder
+that also attaches the caller's bearer token. A builder created with `WebClient.builder()` is **not**
+Boot's auto-configured one, so it carries no observation instrumentation: the outgoing call leaves
+without a `traceparent` header, and `user-service` starts a brand-new trace with no link to the
+request that caused it. Nothing fails, nothing warns — the trace just stops at the boundary.
+
+One line fixes it, in `WebClientConfig`:
+
+```java
+@Bean
+@LoadBalanced
+public WebClient.Builder webClient(ObservationRegistry observationRegistry) {
+    return WebClient.builder()
+            .observationRegistry(observationRegistry)   // without this, the trace ends here
+            .filter(/* bearer-token propagation */);
+}
+```
+
+### Not covered yet
+
+- **Database spans** — needs `datasource-micrometer-spring-boot`
+- **Log shipping** — log lines carry trace ids, but nothing collects them; joining logs to a trace is still manual (ELK is on the roadmap)
+- **Sampling strategy** — `1.0` everywhere; production needs a lower rate, or tail-based sampling at a collector
+- **`discovery-server` and `config-server`** — not instrumented, and not on the request path
+
+---
+
 ## 🎯 Engineering Practices
 
 Rather than list principles, here is what they look like in this codebase:
@@ -447,7 +568,7 @@ main ← stage ← qa ← dev ← feature/*
 
 - [ ] Kafka event streaming + transactional outbox
 - [ ] Redis caching
-- [ ] Distributed tracing (OpenTelemetry)
+- [x] Distributed tracing (OpenTelemetry → Jaeger)
 - [ ] Prometheus & Grafana
 - [ ] Centralized logging (ELK)
 - [ ] Kubernetes deployment on AWS
