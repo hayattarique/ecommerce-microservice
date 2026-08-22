@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="WARN">
+    <Properties>
+        <Property name="APP_NAME">${spring:spring.application.name}</Property>
+        <Property name="PROFILE">${spring:spring.profiles.active}</Property>
+        <Property name="LOG_DIR">log</Property>
+
+        <!--Common log pattern -->
+        <Property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId=%X{traceId}] [spanId=%X{spanId}] %logger{36} - %msg%ex%n
+        </Property>
+
+    </Properties>
+
+    <Appenders>
+        <!-- ========================= -->
+        <!--        Console            -->
+        <!-- ========================= -->
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${PATTERN}"/>
+        </Console>
+
+        <!-- ========================= -->
+        <!--        Rolling File       -->
+        <!-- ========================= -->
+
+        <RollingRandomAccessFile
+                name="RollingFile"
+                fileName="${LOG_DIR}/${APP_NAME}-${PROFILE}.log"
+                filePattern="${LOG_DIR}/${APP_NAME}-${PROFILE}-%d{yyyy-MM-dd}-%i.log.gz"
+                immediateFlush="false">
+
+            <PatternLayout pattern="${PATTERN}"/>
+
+            <Policies>
+
+                <!-- Roll over every day -->
+                <TimeBasedTriggeringPolicy
+                        interval="1"
+                        modulate="true"/>
+
+                <!-- Also roll over at 100 MB -->
+                <SizeBasedTriggeringPolicy
+                        size="100 MB"/>
+
+            </Policies>
+
+            <!-- Keep 15 archived files -->
+            <DefaultRolloverStrategy
+                    max="15"/>
+
+        </RollingRandomAccessFile>
+
+    </Appenders>
+
+
+    <Loggers>
+
+        <!-- ========================= -->
+        <!-- DEV / QA / STAGING / LOCAL -->
+        <!-- ========================= -->
+
+        <SpringProfile name=" local">
+
+            <AsyncRoot
+                    level="INFO"
+                    includeLocation="false">
+                <!-- store logs in console only -->
+                <AppenderRef ref="Console"/>
+
+            </AsyncRoot>
+
+        </SpringProfile>
+
+        <SpringProfile name="dev | qa | staging">
+
+            <AsyncRoot
+                    level="INFO"
+                    includeLocation="false">
+
+                <AppenderRef ref="Console"/>
+                <AppenderRef ref="RollingFile"/>
+
+            </AsyncRoot>
+
+        </SpringProfile>
+
+
+        <!-- ========================= -->
+        <!-- PRODUCTION                -->
+        <!-- ========================= -->
+
+        <SpringProfile name="prod">
+
+            <AsyncRoot
+                    level="WARN"
+                    includeLocation="false">
+
+                <AppenderRef ref="Console"/>
+                <AppenderRef ref="RollingFile"/>
+
+            </AsyncRoot>
+
+        </SpringProfile>
+
+
+        <!-- ========================= -->
+        <!-- DEFAULT                   -->
+        <!-- ========================= -->
+
+        <SpringProfile name="default">
+
+            <AsyncRoot
+                    level="INFO"
+                    includeLocation="false">
+
+                <AppenderRef ref="Console"/>
+                <AppenderRef ref="RollingFile"/>
+
+            </AsyncRoot>
+
+        </SpringProfile>
+
+    </Loggers>
+
+</Configuration>
