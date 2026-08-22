@@ -1,7 +1,7 @@
 package org.ecommerce.user.controller;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.user.service.UserService;
 import org.ecommerce.utility.commons.constants.InternalMappingConstant;
 import org.ecommerce.utility.commons.util.ApiResponse;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(InternalMappingConstant.BASE_URL)
 @RequiredArgsConstructor
 @RestController
-@Slf4j
+@Log4j2
 public class InternalApiController {
 
     private final UserService userService;

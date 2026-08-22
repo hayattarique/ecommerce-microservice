@@ -2,7 +2,7 @@ package org.ecommerce.auth.service.service.impl;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.entity.RefreshTokenEntity;
 import org.ecommerce.auth.service.entity.UserCredentialEntity;
 import org.ecommerce.auth.service.exception.AuthenticationException;
@@ -23,7 +23,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Log4j2
 public class TokenServiceImpl implements TokenService {
 
     //----------DEPENDENCIES-----------------------------------

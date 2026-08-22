@@ -4,7 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.gateway.constant.OpenEndpoint;
 import org.ecommerce.gateway.constant.SecurityConstants;
 import org.ecommerce.gateway.utils.ErrorResponse;
@@ -30,7 +30,7 @@ import tools.jackson.databind.ObjectMapper;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
 @NullMarked
-@Slf4j
+@Log4j2
 public class JwtAuthenticationFilter implements GlobalFilter {
 
     private final JwtUtils jwtUtils;

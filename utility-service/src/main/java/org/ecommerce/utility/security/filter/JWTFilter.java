@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.utility.commons.constants.SecurityConstants;
 import org.ecommerce.utility.security.constants.JwtClaimConstants;
 import org.ecommerce.utility.security.exception.JwtException;
@@ -25,7 +25,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @RequiredArgsConstructor
-@Slf4j
+@Log4j2
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JwtTokenValidatorService jwtTokenValidator;
