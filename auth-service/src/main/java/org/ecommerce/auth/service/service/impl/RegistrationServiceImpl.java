@@ -1,7 +1,7 @@
 package org.ecommerce.auth.service.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.dto.SignupRequest;
 import org.ecommerce.auth.service.entity.UserCredentialEntity;
 import org.ecommerce.auth.service.exception.AuthenticationException;
@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Log4j2
 public class RegistrationServiceImpl implements RegistrationService {
 
     //----------- DEPENDENCIES ---------------------------------------------------

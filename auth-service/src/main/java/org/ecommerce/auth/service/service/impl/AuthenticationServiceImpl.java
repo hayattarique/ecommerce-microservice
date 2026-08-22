@@ -2,7 +2,7 @@ package org.ecommerce.auth.service.service.impl;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.dto.AuthenticationDto;
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
 import org.ecommerce.auth.service.dto.RefreshTokenRequest;
@@ -25,7 +25,7 @@ import static org.ecommerce.utility.security.constants.JwtClaimConstants.USER_AC
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Log4j2
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     //----------- DEPENDENCIES ---------------------------------------------------
@@ -40,7 +40,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AuthenticationDto authenticate(AuthenticationRequest request) {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         if (authenticate.getPrincipal() instanceof AuthenticatedUser authenticationDetails) {
-            tokenService.revokeAllRefreshTokensForUser(authenticationDetails.getId());
+            tokenService.revokeAllRefreshTokensForUser(authenticationDetails.getUserAccountId());
             String accessToken = tokenService.generateAccessToken(authenticationDetails);
             String refreshToken = tokenService.generateRefreshToken(authenticationDetails);
             return new AuthenticationDto(authenticationDetails.getId(), accessToken, refreshToken);
@@ -62,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             // step 4: create authenticated user object
             AuthenticatedUser authenticatedUser = AuthenticatedUser.builder()
-                    .id(claims.get(USER_ACCOUNT_ID, Long.class))
+                    .id(Long.valueOf(claims.getSubject()))
                     .userAccountId(user.getUserAccountId())
                     .email(user.getEmail())
                     .roles(user.getRoles())

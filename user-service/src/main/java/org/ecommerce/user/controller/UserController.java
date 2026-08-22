@@ -2,7 +2,7 @@ package org.ecommerce.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.user.dto.RoleDto;
 import org.ecommerce.user.dto.UserDto;
 import org.ecommerce.user.service.UserService;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(UserMappingConstant.BASE)
-@Slf4j
+@Log4j2
 @RequiredArgsConstructor
 @CrossOrigin
 public class UserController {
@@ -28,11 +28,6 @@ public class UserController {
 
     }
 
-    @GetMapping(UserMappingConstant.GET_USER_BY_EMAIL)
-    public ResponseEntity<ApiResponse<Object>> login(@PathVariable String email) {
-        log.info("Received login request for user: {}", email);
-        return ResponseEntity.ok(ApiResponse.success(userService.getUserByEmail(email), "User retrieved successfully"));
-    }
 
     @PutMapping(UserMappingConstant.ASSIGN_ROLE_BY_ID)
     @PreAuthorize("hasRole('ADMIN')")

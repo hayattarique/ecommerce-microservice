@@ -2,7 +2,7 @@ package org.ecommerce.auth.service.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
 import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 import org.ecommerce.auth.service.dto.SignupRequest;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(AuthMappingConstant.BASE)
-@Slf4j
+@Log4j2
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final RegistrationService registrationService;

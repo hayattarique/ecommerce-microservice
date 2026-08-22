@@ -1,0 +1,89 @@
+pipeline {
+    agent any
+
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+        buildDiscarder(logRotator(numToKeepStr: '15'))
+    }
+
+    environment {
+        MODULE   = 'auth-service'
+        APP_PORT = '9091'
+        PROFILE  = 'dev'
+        UTILITY_SERVICE = 'utility-service'
+    }
+
+    stages {
+
+
+        stage('Install parent POM') {
+            steps {
+                dir('ecommerce-parent') {
+                    sh 'mvn -B -N clean install'
+                }
+            }
+        }
+
+        stage('Build utility-service') {
+            steps {
+                dir("${UTILITY_SERVICE}") {
+                    sh 'mvn -B clean install -DskipTests'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir("${MODULE}") {
+                    sh 'mvn -B clean test'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                dir("${MODULE}") {
+                    sh 'mvn -B package -DskipTests'
+                }
+            }
+        }
+
+
+        stage('Stop old instance') {
+            steps {
+                // Polite shutdown first, so Spring Boot deregisters from Eureka
+                // and closes the DB pool cleanly.
+                sh 'pkill -f "$MODULE/target" || true'
+                sh 'sleep 15'
+                // Force anything that ignored it -- otherwise the port stays
+                // occupied and the new instance cannot bind.
+                sh 'pkill -9 -f "$MODULE/target" || true'
+                sh 'sleep 3'
+            }
+        }
+
+        stage('Deploy jar') {
+            steps {
+                sh '''
+                    JENKINS_NODE_COOKIE=dontKillMe nohup java -jar $WORKSPACE/$MODULE/target/*.jar --spring.profiles.active=$PROFILE --server.port=$APP_PORT > /tmp/$MODULE.log 2>&1 &
+                    sleep 5
+                    tail -n 20 /tmp/$MODULE.log
+                '''
+            }
+        }
+
+        stage('Health check') {
+            steps {
+                sh 'curl -sf --retry 12 --retry-delay 5 --retry-connrefused http://localhost:$APP_PORT/actuator/health || { tail -n 100 /tmp/$MODULE.log; exit 1; }'
+                echo 'HEALTH CHECKED PASSED!'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "${MODULE} deployed and healthy on port ${APP_PORT} (profile: ${PROFILE}) -- http://localhost:${APP_PORT}/actuator/health"
+        }
+    }
+}

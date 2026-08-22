@@ -1,28 +1,32 @@
 package org.ecommerce.auth.service.integration.adapter;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.dto.SignupRequest;
 import org.ecommerce.auth.service.exception.DownstreamServiceException;
+import org.ecommerce.auth.service.integration.client.InternalClient;
 import org.ecommerce.auth.service.integration.client.UserClient;
 import org.ecommerce.auth.service.integration.dto.UserDto;
 import org.ecommerce.auth.service.mapper.AuthenticationMapper;
 import org.ecommerce.auth.service.util.AuthErrorCode;
 import org.ecommerce.utility.commons.util.ApiResponse;
+import org.ecommerce.utility.security.config.JWTPropertiesConfig;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Log4j2
 public class UserAdapter {
     private final UserClient userClient;
+    private final InternalClient internalClient;
     private final AuthenticationMapper mapper;
+    private final JWTPropertiesConfig jwtPropertiesConfig;
 
     public UserDto getUserByEmail(String email) {
         log.info("CALLING USER-CLIENT GET-USER-BY-EMAIL{}", email);
         try {
-            ResponseEntity<ApiResponse<UserDto>> response = userClient.findUserByEmail(email);
+            ResponseEntity<ApiResponse<UserDto>> response = internalClient.findUserByEmail(email,jwtPropertiesConfig.getApiKey());
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 log.info("USER-CLIENT RESPONSE {}", response.getBody().getData());
                 return response.getBody().getData();

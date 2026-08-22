@@ -9,4 +9,5 @@ public class JWTPropertiesConfig {
     private final String secretKey;
     private final Long expiration;
     private final Long refreshExpiration;
+    private final String apiKey;
 }
