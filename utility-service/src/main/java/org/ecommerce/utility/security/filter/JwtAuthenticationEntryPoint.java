@@ -3,7 +3,7 @@ package org.ecommerce.utility.security.filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.utility.commons.util.ErrorResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.MediaType;
@@ -16,7 +16,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
-@Slf4j
+@Log4j2
 @RequiredArgsConstructor
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 

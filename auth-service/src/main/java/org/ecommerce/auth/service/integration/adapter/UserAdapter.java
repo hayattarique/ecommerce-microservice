@@ -1,7 +1,7 @@
 package org.ecommerce.auth.service.integration.adapter;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.dto.SignupRequest;
 import org.ecommerce.auth.service.exception.DownstreamServiceException;
 import org.ecommerce.auth.service.integration.client.InternalClient;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Log4j2
 public class UserAdapter {
     private final UserClient userClient;
     private final InternalClient internalClient;

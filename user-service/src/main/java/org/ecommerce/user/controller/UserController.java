@@ -2,7 +2,7 @@ package org.ecommerce.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.user.dto.RoleDto;
 import org.ecommerce.user.dto.UserDto;
 import org.ecommerce.user.service.UserService;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(UserMappingConstant.BASE)
-@Slf4j
+@Log4j2
 @RequiredArgsConstructor
 @CrossOrigin
 public class UserController {

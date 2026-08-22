@@ -2,7 +2,7 @@ package org.ecommerce.auth.service.service.impl;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.dto.AuthenticationDto;
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
 import org.ecommerce.auth.service.dto.RefreshTokenRequest;
@@ -25,7 +25,7 @@ import static org.ecommerce.utility.security.constants.JwtClaimConstants.USER_AC
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Log4j2
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     //----------- DEPENDENCIES ---------------------------------------------------
