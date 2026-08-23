@@ -16,4 +16,6 @@ public class JwtClaimConstants {
     public static final String PERMISSIONS = "permissions";
 
     public static final String TOKEN_TYPE = "tokenType";
+
+    public static final String USER_ACCOUNT_ID_HEADER = "X-Forward-User-Account-Id";
 }

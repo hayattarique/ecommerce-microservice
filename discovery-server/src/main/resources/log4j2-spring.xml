@@ -7,7 +7,7 @@
         <Property name="LOG_DIR">log</Property>
 
         <!--Common log pattern -->
-        <Property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId=%X{traceId}] [spanId=%X{spanId}] %logger{36} - %msg%ex%n
+        <Property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId=%X{traceId}] [spanId=%X{spanId}] [userAccountId=%X{userAccountId}] %logger{36} - %msg%ex%n
         </Property>
 
     </Properties>
