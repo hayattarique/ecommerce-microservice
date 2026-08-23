@@ -17,6 +17,7 @@ import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.ecommerce.utility.security.service.JwtClaimExtractorService;
 import org.ecommerce.utility.security.service.JwtTokenValidatorService;
 import org.ecommerce.utility.security.utils.TokenType;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -60,6 +61,12 @@ public class JWTFilter extends OncePerRequestFilter {
             if (TokenType.REFRESH_TOKEN.name().equals(claims.get(JwtClaimConstants.TOKEN_TYPE, String.class))) {
                 reject(request, response, SecurityErrorCode.INVALID_TOKEN_TYPE);
                 return;
+            }
+            String userAccountId = request.getHeader(JwtClaimConstants.USER_ACCOUNT_ID_HEADER);
+
+            // step 3 extract userId from claims and set it in MDC for logging
+            if (userAccountId!= null) {
+                MDC.put(JwtClaimConstants.USER_ACCOUNT_ID, userAccountId);
             }
             AuthenticatedUser authenticatedUser = jwtClaimExtractor.extractAuthenticatedUser(claims);
             UsernamePasswordAuthenticationToken authentication =
