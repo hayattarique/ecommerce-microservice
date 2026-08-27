@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.dto.AuthenticationDto;
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
+import org.ecommerce.auth.service.dto.LogoutRequest;
 import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 import org.ecommerce.auth.service.exception.AuthenticationException;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
@@ -77,6 +78,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return new AuthenticationDto(authenticatedUser.getId(), accessToken, refreshToken);
         }
         throw new AuthenticationException(AuthErrorCode.INVALID_REFRESH_TOKEN);
+    }
+
+    @Override
+    public void logout(LogoutRequest request) {
+        // step 1: validate refresh token
+        if (tokenService.validateRefreshToken(request.refreshToken())) {
+            Claims claims = jwtTokenValidator.validateTokenAndGetClaims(request.accessToken());
+            Long userAccountId = claims.get(USER_ACCOUNT_ID, Long.class);
+            tokenService.revokeAllRefreshTokensForUser(userAccountId);
+        }
+
+
     }
 
 

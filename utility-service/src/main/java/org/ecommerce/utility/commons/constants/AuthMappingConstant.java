@@ -6,5 +6,6 @@ public interface AuthMappingConstant {
     String LOGIN = "/login";
     String REGISTER = "/register";
     String REFRESH_TOKEN = "/refresh-token";
+    String LOGOUT = "/logout";
 
 }

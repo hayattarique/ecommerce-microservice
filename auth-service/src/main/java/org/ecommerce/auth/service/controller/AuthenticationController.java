@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
+import org.ecommerce.auth.service.dto.LogoutRequest;
 import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 import org.ecommerce.auth.service.dto.SignupRequest;
 import org.ecommerce.auth.service.service.AuthenticationService;
@@ -49,6 +50,12 @@ public class AuthenticationController {
     @PostMapping(AuthMappingConstant.REFRESH_TOKEN)
     public ResponseEntity<ApiResponse<Object>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         return ResponseEntity.ok(ApiResponse.success(authenticationService.refreshToken(request), ApiMessages.OPERATION_SUCCESSFUL));
+    }
+
+    @PostMapping(AuthMappingConstant.LOGOUT)
+    public ResponseEntity<ApiResponse<Object>> logout(@Valid @RequestBody LogoutRequest request) {
+        authenticationService.logout(request);
+        return ResponseEntity.ok(ApiResponse.success(null, ApiMessages.LOGOUT_SUCCESS));
     }
 
 }
