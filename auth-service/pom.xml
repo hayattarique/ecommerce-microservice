@@ -55,9 +55,16 @@
             <artifactId>spring-boot-starter-restclient</artifactId>
         </dependency>
 
+        <!--
+            Apache HttpComponents Client 5.
+            With it on the classpath, ClientHttpRequestFactoryBuilder.detect() picks
+            HttpComponentsClientHttpRequestFactory over the JDK one, which gives us a
+            real connection pool (keep-alive reuse, per-route caps, idle eviction)
+            instead of a fresh TCP+TLS handshake per call.
+        -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
         </dependency>
 
 

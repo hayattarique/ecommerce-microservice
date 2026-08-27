@@ -26,6 +26,7 @@ public interface ApiMessages {
     String SERVICE_UNAVAILABLE = "Service is temporarily unavailable. Please try again later.";
     String INVALID_REQUEST = "Invalid request. Please check your input and try again.";
     String OPERATION_SUCCESSFUL = "Operation completed successfully.";
-    
+
+    String LOGOUT_SUCCESS = "You have been logged out successfully.";
 }
 

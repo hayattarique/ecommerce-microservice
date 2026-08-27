@@ -21,9 +21,6 @@ public class SecurityConfig {
     private final JWTFilter jwtFilter;
     private final JwtAuthenticationEntryPoint  jwtAuthenticationEntryPoint;
 
-    // "/actuator/health/**" is open so the Jenkins pipeline can poll it after a
-    // deploy without holding a JWT. Only the health endpoint is exposed
-    // (management.endpoints.web.exposure.include), so nothing else is reachable.
     private static final String[] WHITE_LIST_URL = { "/api/v1/auth/**", "/api/v1/open/**",
             "/actuator/health", "/actuator/health/**",
             "/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources", "/swagger-resources/**",

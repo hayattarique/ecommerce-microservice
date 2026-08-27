@@ -9,6 +9,7 @@ import org.ecommerce.auth.service.integration.client.UserClient;
 import org.ecommerce.auth.service.integration.dto.UserDto;
 import org.ecommerce.auth.service.mapper.AuthenticationMapper;
 import org.ecommerce.auth.service.util.AuthErrorCode;
+import org.ecommerce.utility.commons.contract.ErrorCode;
 import org.ecommerce.utility.commons.util.ApiResponse;
 import org.ecommerce.utility.security.config.JWTPropertiesConfig;
 import org.springframework.http.ResponseEntity;
@@ -18,46 +19,35 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Log4j2
 public class UserAdapter {
+
     private final UserClient userClient;
     private final InternalClient internalClient;
     private final AuthenticationMapper mapper;
     private final JWTPropertiesConfig jwtPropertiesConfig;
 
     public UserDto getUserByEmail(String email) {
-        log.info("CALLING USER-CLIENT GET-USER-BY-EMAIL{}", email);
-        try {
-            ResponseEntity<ApiResponse<UserDto>> response = internalClient.findUserByEmail(email,jwtPropertiesConfig.getApiKey());
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                log.info("USER-CLIENT RESPONSE {}", response.getBody().getData());
-                return response.getBody().getData();
-            }
-            log.warn("USER-CLIENT RESPONSE NOT SUCCESSFUL {}", email);
-            throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
-        } catch (Exception e) {
-            log.error("ERROR CALLING USER-CLIENT {}", email, e);
-            throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
-        }
+        log.info("CALLING USER-CLIENT GET-USER-BY-EMAIL {}", email);
 
+        return required(internalClient.findUserByEmail(email, jwtPropertiesConfig.getApiKey()),
+                email, AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
     }
 
     public UserDto register(SignupRequest signupRequest) {
         log.info("CALLING USER-CLIENT REGISTER {}", signupRequest.getEmail());
 
-        try {
-            UserDto userDto = mapper.signupRequestToUserDto(signupRequest);
-            ResponseEntity<ApiResponse<UserDto>> response = userClient.register(userDto);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                log.info("USER-CLIENT REGISTER RESPONSE {}", response.getBody().getData());
-                return response.getBody().getData();
-            } else {
-                log.warn("USER-CLIENT REGISTER RESPONSE NOT SUCCESSFUL {}", signupRequest.getEmail());
-                throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
-            }
-        } catch (DownstreamServiceException e) {
-            log.error("ERROR CALLING USER-CLIENT REGISTER {}", signupRequest.getEmail(), e);
-            throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
-        }
-
+        return required(userClient.register(mapper.signupRequestToUserDto(signupRequest)),
+                signupRequest.getEmail(), AuthErrorCode.REGISTRATION_FAILED);
     }
 
+    private UserDto required(ResponseEntity<ApiResponse<UserDto>> response, String email, ErrorCode errorCode) {
+        ApiResponse<UserDto> body = response.getBody();
+        UserDto data = body == null ? null : body.getData();
+
+        if (data == null) {
+            log.warn("USER-CLIENT RETURNED AN EMPTY BODY FOR {}", email);
+            throw new DownstreamServiceException(errorCode);
+        }
+        log.info("USER-CLIENT RESPONSE {}", data);
+        return data;
+    }
 }
