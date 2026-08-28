@@ -8,6 +8,7 @@ import org.ecommerce.auth.service.integration.client.UserClient;
 import org.ecommerce.auth.service.exception.DownstreamServiceException;
 import org.ecommerce.auth.service.util.AuthErrorCode;
 import org.ecommerce.utility.commons.constants.SecurityConstants;
+import org.ecommerce.utility.commons.contract.ErrorCode;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -94,10 +95,35 @@ public class RestClientConfig {
         return (request, response) -> {
             HttpStatusCode status = response.getStatusCode();
             String body = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
+
             log.error("DOWNSTREAM {} FAILED - {} {} - status={} body={}",
                     serviceName, request.getMethod(), request.getURI(), status, body);
-            throw new DownstreamServiceException(AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED, status);
+
+            /*
+             * Whose fault it was decides what our own caller is told, and that decides whether
+             * they retry. Mapping everything to 503 - as this used to - tells a caller "try
+             * again later" even when we sent a malformed request that will fail identically
+             * every time.
+             */
+            ErrorCode errorCode = worthRetrying(status)
+                    ? AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED   // 503 - their problem
+                    : AuthErrorCode.DOWNSTREAM_REQUEST_REJECTED;        // 500 - our problem
+
+            throw new DownstreamServiceException(errorCode, status);
         };
+    }
+
+    /**
+     * Would sending the exact same request again have a chance of succeeding?
+     *
+     * <ul>
+     *   <li>5xx - the downstream broke. It may well be fine on the next attempt.</li>
+     *   <li>429 - it is explicitly telling us to slow down, not that the request is wrong.</li>
+     *   <li>every other 4xx - the request itself is the problem. Retrying is pointless.</li>
+     * </ul>
+     */
+    private static boolean worthRetrying(HttpStatusCode status) {
+        return status.is5xxServerError() || status.value() == 429;
     }
 
 
