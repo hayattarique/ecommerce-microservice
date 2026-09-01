@@ -87,8 +87,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Claims claims = jwtTokenValidator.validateTokenAndGetClaims(request.accessToken());
             Long userAccountId = claims.get(USER_ACCOUNT_ID, Long.class);
             tokenService.revokeAllRefreshTokensForUser(userAccountId);
+            return;
         }
-
+        throw new AuthenticationException(AuthErrorCode.INVALID_REFRESH_TOKEN);
 
     }
 
