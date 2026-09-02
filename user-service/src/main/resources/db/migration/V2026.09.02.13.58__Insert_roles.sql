@@ -26,3 +26,4 @@ VALUES
         'system',
         'system'
     );
+ON CONFLICT (name) DO NOTHING;

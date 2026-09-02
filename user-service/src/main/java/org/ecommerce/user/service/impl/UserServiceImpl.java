@@ -13,6 +13,7 @@ import org.ecommerce.user.repositories.RoleRepository;
 import org.ecommerce.user.repositories.UserRepository;
 import org.ecommerce.user.repositories.UserRoleRepository;
 import org.ecommerce.user.service.UserService;
+import org.ecommerce.user.utils.RoleConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,7 @@ public class UserServiceImpl implements UserService {
     public UserDto registerUser(UserDto userDto) {
         UserEntity entity = userMapper.toEntity(userDto);
 //      assign default role to user
-        roleRepository.findById(2L).ifPresent(role -> {
+        roleRepository.findByName(RoleConstants.USER).ifPresent(role -> {
             UserRoleEntity userRoleEntity = new UserRoleEntity();
             userRoleEntity.setRole(role);
             userRoleEntity.setUser(entity);
