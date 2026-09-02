@@ -25,5 +25,4 @@ VALUES
         CURRENT_TIMESTAMP,
         'system',
         'system'
-    );
-ON CONFLICT (name) DO NOTHING;
+    ) ON CONFLICT (name) DO NOTHING;
