@@ -6,12 +6,15 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Data
+@Setter
+@Getter
 @Table(name = "roles")
 public class RoleEntity extends BaseEntity {
     @Column(unique = true, nullable = false)

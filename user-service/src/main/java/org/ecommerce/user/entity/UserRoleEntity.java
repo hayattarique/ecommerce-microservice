@@ -3,10 +3,13 @@ package org.ecommerce.user.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+@EqualsAndHashCode(callSuper = true,exclude = {"user","role"})
 @Entity
+@Getter
+@Setter
 @Table(name = "user_roles",uniqueConstraints = @UniqueConstraint(columnNames = {"user_id","role_id"}))
 public class UserRoleEntity extends BaseEntity {
     @ManyToOne

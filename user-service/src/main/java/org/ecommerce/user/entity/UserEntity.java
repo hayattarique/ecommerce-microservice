@@ -3,14 +3,18 @@ package org.ecommerce.user.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.ecommerce.user.utils.Gender;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true,exclude = "roles")
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "users")
 public class UserEntity extends BaseEntity {
     @Column(unique = true)
@@ -23,7 +27,7 @@ public class UserEntity extends BaseEntity {
     private String mobile;
     private boolean active = true;
     private LocalDate dateOfBirth;
-    @OneToMany(mappedBy = "user")
-    private Set<UserRoleEntity> roles;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserRoleEntity> roles = new HashSet<>();
 
 }
