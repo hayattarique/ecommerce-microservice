@@ -32,6 +32,7 @@
         <module>../gateway</module>
         <module>../auth-service</module>
         <module>../user-service</module>
+        <module>../product-service</module>
         <!-- add more later -->
     </modules>
 
