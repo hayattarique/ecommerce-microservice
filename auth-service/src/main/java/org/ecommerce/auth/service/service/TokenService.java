@@ -50,4 +50,7 @@ public interface TokenService {
     void revokeAllRefreshTokensForUser(Long userId);
 
 
+    void removeRefreshTokenByBatch(int batchSize);
+
+
 }

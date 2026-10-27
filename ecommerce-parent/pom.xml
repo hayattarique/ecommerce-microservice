@@ -25,6 +25,7 @@
         <swagger.version>3.0.2</swagger.version>
         <jwt.version>0.13.0</jwt.version>
         <flyway.version>12.4.0</flyway.version>
+        <shedlock.version>7.10.1</shedlock.version>
     </properties>
 
     <modules>
@@ -142,7 +143,17 @@
             <version>4.0.0</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>${shedlock.version}</version>
+        </dependency>
 
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-jdbc-template</artifactId>
+            <version>${shedlock.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
