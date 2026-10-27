@@ -15,6 +15,7 @@ import org.ecommerce.utility.security.constants.JwtClaimConstants;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.ecommerce.utility.security.service.JwtTokenValidatorService;
 import org.ecommerce.utility.security.utils.TokenType;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,6 +81,15 @@ public class TokenServiceImpl implements TokenService {
         List<RefreshTokenEntity> refreshTokenEntities = tokenRepository.findAllByUserAccountIdAndActiveTrue(userId);
         refreshTokenEntities.forEach(this::revoke);
         tokenRepository.saveAll(refreshTokenEntities);
+    }
+
+    @Override
+    public void removeRefreshTokenByBatch(int batchSize) {
+        List<RefreshTokenEntity> entities = null;
+        do {
+            entities = tokenRepository.findAllByBatch(PageRequest.of(0, batchSize));
+            tokenRepository.deleteAllInBatch(entities);
+        } while (!entities.isEmpty());
     }
 
     /**
