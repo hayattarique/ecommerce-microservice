@@ -1,192 +1,207 @@
-# 🛒 Enterprise E-Commerce Microservices
+# 🛒 E-Commerce Microservices Platform
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.2-6DB33F?style=flat-square&logo=spring&logoColor=white)
-![Spring Security](https://img.shields.io/badge/Spring%20Security-JWT-6DB33F?style=flat-square&logo=springsecurity&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Flyway](https://img.shields.io/badge/Flyway-12.4.0-CC0200?style=flat-square&logo=flyway&logoColor=white)
-![Maven](https://img.shields.io/badge/Maven-multi--module-C71A36?style=flat-square&logo=apachemaven&logoColor=white)
+![LangChain4j](https://img.shields.io/badge/LangChain4j-AI%20agents-1C3C3C?style=flat-square&logo=langchain&logoColor=white)
+![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-Jaeger-425CC7?style=flat-square&logo=opentelemetry&logoColor=white)
 ![Jenkins](https://img.shields.io/badge/Jenkins-CI%2FCD-D24939?style=flat-square&logo=jenkins&logoColor=white)
-![Actuator](https://img.shields.io/badge/Actuator-health--gated%20deploys-6DB33F?style=flat-square&logo=springboot&logoColor=white)
-![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-tracing-425CC7?style=flat-square&logo=opentelemetry&logoColor=white)
-![Jaeger](https://img.shields.io/badge/Jaeger-2.20.0-60D0E4?style=flat-square&logo=jaeger&logoColor=white)
-![ShedLock](https://img.shields.io/badge/ShedLock-7.10.1-5C6BC0?style=flat-square&logo=clockify&logoColor=white)
 
-> A distributed e-commerce backend built with **Java 21**, **Spring Boot 4**, and **Spring Cloud** —
-> engineered the way backend systems are built in professional teams: modular services, a reusable
-> security starter, versioned database migrations, and a documented Git workflow.
+A distributed e-commerce backend built with **Java 21, Spring Boot 4 and Spring Cloud**. It is
+split into independently deployable services behind an API gateway, secured with JWT, traced end
+to end with OpenTelemetry, and now growing an **AI assistant built on LangChain4j** that answers
+questions by calling the platform's own services.
 
-**🚧 Actively under development.** Built sprint by sprint, with code review and refactoring between
-each. This README describes what is **actually running today** — planned work is marked as such.
+> 🚧 **Actively developed, sprint by sprint.** Everything below marked ✅ runs today; anything else
+> is labelled as scaffolded or planned.
+
+---
+
+## ✨ Highlights
+
+- **Secure by design** — JWT access tokens plus rotating, revocable refresh tokens; role-based access
+  control; tokens checked at the gateway *and* inside every service.
+- **Reusable security starter** — a Spring Boot auto-configuration library: a new service adds one
+  dependency and gets JWT validation for free.
+- **Resilient service-to-service calls** — declarative HTTP clients, pooled connections, service
+  discovery, and error mapping that separates retryable from non-retryable failures.
+- **Observable** — every request is one trace in Jaeger, and every log line and response carries the
+  trace id.
+- **Automated delivery** — one Jenkins pipeline per service; a deploy only passes when the service
+  reports healthy.
+- **Cluster-safe scheduling** — background jobs run on exactly one instance, using ShedLock.
+- **AI assistant (in progress)** — LangChain4j + OpenAI GPT-5, designed to call services as *tools*
+  under the user's own permissions.
 
 ---
 
 ## 🏗️ Architecture
 
 ```mermaid
-graph TB
+flowchart LR
     Client([Client])
 
     subgraph Edge
-        GW["🚪 gateway<br/>:9999<br/>Spring Cloud Gateway · WebFlux"]
-    end
-
-    subgraph Platform
-        EUREKA["🧭 discovery-server<br/>:8761<br/>Eureka Registry"]
+        GW["🚪 API Gateway<br/>:9999"]
     end
 
     subgraph Services
-        AUTH["🔐 auth-service<br/>:9091<br/>credentials · JWT issuance"]
-        USER["👤 user-service<br/>:9092<br/>profiles · roles · permissions"]
+        AUTH["🔐 auth-service<br/>:9091"]
+        USER["👤 user-service<br/>:9092"]
+        PROD["📦 product-service<br/>:9093"]
+        AI["🤖 ai-service<br/>:9094"]
     end
 
-    subgraph Data
-        AUTHDB[("PostgreSQL<br/>auth-service")]
-        USERDB[("PostgreSQL<br/>user-service")]
+    subgraph Data["PostgreSQL — one database per service"]
+        AUTHDB[("auth_service")]
+        USERDB[("user_service")]
+        PRODDB[("product_service")]
     end
 
-    subgraph Observability
-        JAEGER["🔭 Jaeger<br/>:16686<br/>OTLP traces"]
-    end
+    LLM[["🧠 OpenAI GPT-5"]]
 
-    Client -->|Bearer JWT| GW
-    GW -->|lb://AUTH-SERVICE| AUTH
-    GW -->|lb://USER-SERVICE| USER
-    AUTH -->|X-Internal-Api-Key| USER
-    AUTH --> AUTHDB
-    USER --> USERDB
+    Client -->|"HTTPS + JWT"| GW
+    GW --> AUTH
+    GW --> USER
+    GW -.-> AI
+    AUTH -->|"internal API key"| USER
+    AI -->|"chat model"| LLM
+    AI -.->|"tools"| USER
+    AI -.->|"tools"| PROD
 
-    AUTH -.-> EUREKA
-    USER -.-> EUREKA
-    GW -.-> EUREKA
+    AUTH --- AUTHDB
+    USER --- USERDB
+    PROD --- PRODDB
 
-    GW -.->|OTLP| JAEGER
-    AUTH -.-> JAEGER
-    USER -.-> JAEGER
+    classDef wip stroke-dasharray: 5 5
+    class PROD,AI wip
 ```
 
-**Database per service.** No shared tables, no cross-service foreign keys — services are linked by
-identifier only, exactly as they would be if deployed independently.
+**Reading the diagram:** solid lines run today; dashed lines and boxes are scaffolded or in progress.
+Not drawn, to keep it readable: every service registers with **Eureka** (`discovery-server`, :8761)
+and exports traces to **Jaeger** (:16686).
 
-**Defence in depth.** Tokens are validated twice: once at the gateway, once inside each service.
-A request that reaches a service directly — bypassing the edge — is still fully protected.
+**Key decisions**
 
----
-
-## ✅ What's Implemented
-
-### Authentication & Authorization
-
-| Capability | Detail |
+| Decision | Why |
 |---|---|
-| **User registration** | Password confirmation, BCrypt hashing, profile provisioned in `user-service` |
-| **Login** | `AuthenticationManager` + custom `UserDetailsService` backed by a cross-service lookup |
-| **Access tokens** | HS256 JWT, 1 h TTL, carrying `roles` and `permissions` as claims |
-| **Refresh tokens** | 7 d TTL, persisted and revocable — the stateful half of a stateless design |
-| **Token rotation** | Refreshing revokes the presented token and issues a new one |
-| **Session invalidation** | Logging in revokes all outstanding refresh tokens for that user |
-| **Token-type separation** | A refresh token is rejected anywhere an access token is expected |
-| **RBAC** | `users → roles → permissions` graph, flattened into authorities at request time |
-| **Method-level security** | `@PreAuthorize("hasRole(...)")` / `hasAuthority(...)` |
-| **Service-to-service auth** | Dedicated internal API guarded by a shared key, compared in constant time |
+| **Database per service** | No shared tables or cross-service foreign keys — services link by id only, so each can change and deploy on its own |
+| **Validate tokens twice** | The gateway rejects bad tokens early; each service validates again, so a request that bypasses the gateway is still protected |
+| **Discovery over hard-coded hosts** | Services call each other by name (`lb://USER-SERVICE`) and Eureka resolves the instance |
+| **AI is just another client** | `ai-service` reaches data only through service APIs and the user's JWT — never another service's database |
 
-### Platform
+### How a login works
 
-| Capability | Detail |
+1. The client calls `POST /auth-service/api/v1/auth/login` on the **gateway**, which routes it to
+   `auth-service` (login is a public endpoint).
+2. `auth-service` asks `user-service` for the user's profile, roles and permissions over the
+   **internal API**, authenticated with a shared key.
+3. It checks the BCrypt password, revokes the user's old refresh tokens, and issues a new
+   **access token** (1 h, with roles and permissions inside) and **refresh token** (7 d, stored in
+   the database).
+4. Later requests carry the access token. The gateway checks it, and the target service checks it
+   again and authorizes **locally from the token's claims** — no extra network call.
+
+---
+
+## 🧩 Services
+
+| Service | Port | Responsibility | Status |
+|---|---|---|---|
+| `gateway` | 9999 | Single entry point — routing, JWT check at the edge, trace id on responses | ✅ |
+| `discovery-server` | 8761 | Eureka service registry | ✅ |
+| `auth-service` | 9091 | Registration, login, JWT issuance, refresh-token rotation, token cleanup job | ✅ |
+| `user-service` | 9092 | User profiles, roles, permissions, internal user lookup | ✅ |
+| `utility-service` | — | Shared library: security auto-configuration, error contract, response envelope | ✅ |
+| `product-service` | 9093 | Product catalogue | 🧱 Scaffolded |
+| `ai-service` | 9094 | AI assistant — LangChain4j, tools, agents | 🚧 In progress |
+| `config-server` | 8080 | Spring Cloud Config | 🧱 Scaffolded |
+
+---
+
+## ✅ Features
+
+**Security**
+- User registration with password confirmation and BCrypt hashing
+- Login through Spring Security's `AuthenticationManager`, with user data looked up from `user-service`
+- HS256 access tokens carrying `roles` and `permissions` claims
+- Persisted refresh tokens with rotation on every refresh; login and logout revoke a user's tokens
+- Refresh tokens are rejected anywhere an access token is expected
+- Role-based access control (`users → roles → permissions`) with `@PreAuthorize`
+- Internal service-to-service API on its own filter chain, guarded by a key compared in constant time
+
+**Platform**
+- Shared security starter — Spring Boot auto-configuration, every bean `@ConditionalOnMissingBean`
+- Reactive API gateway (Spring Cloud Gateway on WebFlux) with Eureka-based load balancing
+- Declarative HTTP clients (`@ImportHttpServices`) on a pooled Apache HttpClient 5 connection manager
+- Stable machine-readable error codes (`AUTH_101`, `SEC-002`) and a uniform `ApiResponse<T>` envelope
+- Flyway owns every schema (`ddl-auto=none`); JPA auditing and `@Version` optimistic locking
+- OpenAPI / Swagger UI on the business services
+
+**Operations**
+- One Jenkins pipeline per service, triggered only by changes to that service's paths
+- Health-gated deploys — the build fails unless `/actuator/health` reports `UP`
+- Distributed tracing with OpenTelemetry → Jaeger, plus trace ids in every Log4j2 line
+- Weekend refresh-token cleanup job, locked with ShedLock so it runs on one instance only
+
+**AI assistant — foundation in place**
+- Dedicated `ai-service`, registered in Eureka and part of the Maven build
+- LangChain4j Spring Boot 4 starter with an OpenAI `gpt-5` chat model
+- API key supplied by the `OPEN_AI_KEY` environment variable — never committed
+
+---
+
+## 🧰 Tech Stack
+
+| Area | Technology |
 |---|---|
-| **Shared security starter** | Spring Boot **auto-configuration** — a new service adds one dependency and inherits JWT validation, with every bean `@ConditionalOnMissingBean` so it stays overridable |
-| **API gateway** | Reactive edge filter: rejects bad tokens before they reach a backend, forwards the resolved account id downstream |
-| **Service discovery** | Eureka registry; services resolved by logical name (`lb://USER-SERVICE`), not hard-coded hosts |
-| **Error contract** | `ErrorCode` interface + per-service enums → stable machine-readable codes (`AUTH_101`, `SEC-002`) rather than free-text messages |
-| **Response envelope** | Uniform `ApiResponse<T>` / `PageResponse<T>` across every endpoint |
-| **Global exception handling** | `@RestControllerAdvice` maps any `BusinessException` to the right HTTP status automatically |
-| **Database migrations** | Flyway-versioned SQL; Hibernate runs `ddl-auto=none` so the schema is owned by migrations alone |
-| **Auditing** | `@CreatedBy` / `@LastModifiedBy` resolved from the security context, plus `@Version` optimistic locking on every table |
-| **API documentation** | springdoc OpenAPI on both business services |
-| **CI/CD** | One Jenkins pipeline per service, defined by a `Jenkinsfile` beside the code it builds — test → package → graceful restart → health gate |
-| **Health-gated deploys** | Spring Boot Actuator `/actuator/health` is polled after every deploy; a service that never reports `UP` fails the build instead of quietly staying broken |
-| **Distributed tracing** | OpenTelemetry via `spring-boot-starter-opentelemetry` — every hop of a request exported over OTLP and viewable as a single trace in Jaeger |
-| **Trace-correlated logs** | Log4j2 correlation pattern — every line carries `[service, traceId, spanId]`, so a log line leads straight back to its trace |
-| **Scheduled jobs** | `@Scheduled` cleanup in `auth-service` deletes revoked and expired refresh tokens in batches, so the table does not grow forever |
-| **Distributed job locking** | ShedLock on a JDBC lock table — however many instances are running, a scheduled job executes on exactly one of them |
+| Language & framework | Java 21 · Spring Boot 4.1.0 · Spring Cloud 2025.1.2 |
+| Edge & discovery | Spring Cloud Gateway (WebFlux) · Netflix Eureka · Spring Cloud LoadBalancer |
+| Security | Spring Security · JJWT 0.13.0 · BCrypt |
+| Data | PostgreSQL · Spring Data JPA / Hibernate · Flyway 12.4.0 |
+| Mapping & docs | MapStruct 1.6.3 · Lombok · springdoc OpenAPI 3.0.2 |
+| AI | LangChain4j 1.23.0-beta33 · OpenAI GPT-5 |
+| Scheduling | Spring `@Scheduled` · ShedLock 7.10.1 |
+| Observability | OpenTelemetry · Micrometer Tracing · Jaeger 2.20.0 · Log4j2 · Spring Boot Actuator |
+| Build & delivery | Maven multi-module · Jenkins declarative pipelines |
 
 ---
 
-## 🔐 Security Model
+## 🚀 Getting Started
 
-Authentication is **stateless JWT**. `auth-service` is the only token issuer; every other service is
-a verifier.
+**Prerequisites:** JDK 21 · Maven 3.9+ · PostgreSQL 14+ · Docker (optional, for Jaeger)
 
-**Access token claims**
-
-```json
-{
-  "sub": "1",
-  "userAccountId": 42,
-  "email": "jane@example.com",
-  "roles": ["ADMIN"],
-  "permissions": ["USER_READ", "USER_WRITE"],
-  "tokenType": "ACCESS_TOKEN",
-  "iat": 1753900000,
-  "exp": 1753903600
-}
-```
-
-Embedding roles and permissions means **authorization needs no network call** — any service decides
-locally from the token alone.
-
-**Refresh tokens deliberately omit them.** Authorization data is re-fetched from `user-service` on
-every refresh, so a permission change takes effect within one access-token lifetime instead of
-requiring re-login.
-
-**Two credentials, two purposes**
-
-| Channel | Credential | Used for |
-|---|---|---|
-| Client → service | `Authorization: Bearer <jwt>` | End-user requests |
-| Service → service | `X-Internal-Api-Key` | The internal API, on its own filter chain that never touches JWT |
-
----
-
-## 🚀 Quick Start
-
-**Prerequisites** — JDK 21 · Maven 3.9+ · PostgreSQL 14+
-
-### 1. Create the databases
+**1. Create the databases** — Flyway creates the tables on first start.
 
 ```bash
-psql -U postgres -c 'CREATE DATABASE auth_service; CREATE DATABASE user_service;'
+psql -U postgres -c 'CREATE DATABASE auth_service;' -c 'CREATE DATABASE user_service;' -c 'CREATE DATABASE product_service;'
 ```
 
-Don't create tables — Flyway builds the schema on first startup.
-
-### 2. Build
+**2. Build** — `install`, so the services can resolve the shared starter from your local repository.
 
 ```bash
 mvn -f ecommerce-parent/pom.xml clean install
 ```
 
-`install` (not `package`) — the services resolve the shared starter from your local repository.
-`discovery-server` builds separately: `mvn -f discovery-server/pom.xml clean package`
+`discovery-server` is built on its own:
 
-### 3. Run — order matters
+```bash
+mvn -f discovery-server/pom.xml clean package
+```
 
-| # | Service | Port | Why the order |
+**3. Run the services in this order** — each one with `mvn spring-boot:run` from its folder. The
+`local` profile (the default) points at `localhost:5432`.
+
+| # | Service | Port | Why this order |
 |---|---|---|---|
 | 1 | `discovery-server` | 8761 | Everything else registers here |
 | 2 | `user-service` | 9092 | `auth-service` calls it during login |
 | 3 | `auth-service` | 9091 | |
 | 4 | `gateway` | 9999 | Last, so routes resolve immediately |
+| 5 | `ai-service` *(optional)* | 9094 | Needs `export OPEN_AI_KEY=sk-...` first |
 
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=local
-```
-
-The `local` profile is the one that points at `localhost:5432` — the databases you just created.
-The default profile is `dev`, which targets a remote instance.
-
-### 4. Try it
+**4. Try it**
 
 ```bash
 curl -X POST http://localhost:9091/api/v1/auth/register -H "Content-Type: application/json" -d '{"email":"jane@example.com","firstName":"Jane","lastName":"Doe","displayName":"Jane","mobile":"9876543210","password":"Password123","confirmPassword":"Password123","gender":"FEMALE","dateOfBirth":"1990-01-15"}'
@@ -200,609 +215,117 @@ curl -X POST http://localhost:9091/api/v1/auth/login -H "Content-Type: applicati
 {
   "success": true,
   "message": "Login successful. Welcome back!",
-  "data": { "id": 1, "token": "eyJhbGci...", "refreshToken": "eyJhbGci..." },
-  "timestamp": "2026-08-01T10:15:30.123"
+  "data": { "id": 1, "token": "eyJhbGci...", "refreshToken": "eyJhbGci..." }
 }
 ```
 
-**Swagger UI** — http://localhost:9091/swagger-ui.html · http://localhost:9092/swagger-ui.html
+Swagger UI: http://localhost:9091/swagger-ui.html · http://localhost:9092/swagger-ui.html
 
-### 5. Watch the request trace itself
+**5. See the trace (optional)**
 
 ```bash
-docker compose up -d
+docker run -d --name jaeger -p 16686:16686 -p 4318:4318 jaegertracing/jaeger:2.20.0
 ```
 
-Replay the login call above, then open **http://localhost:16686** — it appears as one trace across
+Repeat the login through the gateway, then open http://localhost:16686 — one trace across
 gateway → auth-service → user-service.
 
-You do not have to hunt for it. Every response carries the id of its own request:
-
-```
-X-Trace-Id: ad7fdf082a8b1066f13c590bcf483576
-```
-
-Paste that into Jaeger. See [Distributed Tracing](#-distributed-tracing) for how it works and what
-is not instrumented yet.
-
 ---
 
-## 📡 API
+## 📡 API Overview
 
-Direct ports shown; via the gateway, prefix with `/auth-service` or `/user-service`.
+Ports are the direct service ports. Through the gateway, prefix the path with `/auth-service` or
+`/user-service`.
 
-### auth-service · `:9091`
+| Service | Method | Endpoint | Access | Purpose |
+|---|---|---|---|---|
+| auth | `POST` | `/api/v1/auth/register` | Public | Create credentials and profile |
+| auth | `POST` | `/api/v1/auth/login` | Public | Issue access + refresh tokens |
+| auth | `POST` | `/api/v1/auth/refresh-token` | Public | Rotate the refresh token, issue a new pair |
+| auth | `POST` | `/api/v1/auth/logout` | Access + refresh token | Revoke the user's refresh tokens |
+| user | `PUT` | `/api/v1/user/assign-role/{id}` | `ROLE_ADMIN` | Assign a role to a user |
+| user | `POST` | `/api/v1/roles/add-role` | JWT | Create a role |
+| user | `GET` | `/api/v1/roles/find-all-by-paginated` | JWT | Paginated roles (`page`, `size`, `sortBy`, `dir`) |
+| user | `GET` | `/api/v1/internal/{email}` | API key | Profile with roles and permissions (service-to-service) |
+| ai | — | *chat endpoint* | — | Planned — arrives with the first agent |
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/v1/auth/register` | Public | Create credentials + profile |
-| `POST` | `/api/v1/auth/login` | Public | Issue access + refresh tokens |
-| `POST` | `/api/v1/auth/refresh-token` | Public | Rotate refresh token, issue new pair |
-
-### user-service · `:9092`
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/v1/user/register` | Internal | Create a user profile |
-| `PUT` | `/api/v1/user/assign-role/{id}` | `ROLE_ADMIN` | Assign a role to a user |
-| `POST` | `/api/v1/roles/add-role` | JWT | Create a role |
-| `GET` | `/api/v1/roles/find-all-by-paginated` | JWT | Paginated roles — `page`, `size`, `sortBy`, `dir` |
-| `GET` | `/api/v1/internal/{email}` | API key | Profile with roles + permissions |
-
-**Error responses** carry a stable code:
+Errors share one shape, with a stable code clients can branch on:
 
 ```json
-{
-  "status": 401,
-  "errorCode": "SEC-002",
-  "message": "JWT token expired",
-  "path": "/api/v1/roles/find-all-by-paginated",
-  "timestamp": "2026-08-01T10:15:30.123"
-}
+{ "status": 401, "errorCode": "SEC-002", "message": "JWT token expired", "path": "/api/v1/roles/find-all-by-paginated" }
 ```
-
----
-
-## 🧰 Technology Stack
-
-| Layer | Technology | Version |
-|---|---|---|
-| Language | Java | 21 |
-| Framework | Spring Boot | 4.1.0 |
-| Cloud | Spring Cloud | 2025.1.2 |
-| Gateway | Spring Cloud Gateway (WebFlux) | — |
-| Discovery | Netflix Eureka | — |
-| Security | Spring Security + JJWT | 0.13.0 |
-| Persistence | Spring Data JPA / Hibernate | — |
-| Database | PostgreSQL | 14+ |
-| Migrations | Flyway | 12.4.0 |
-| Mapping | MapStruct | 1.6.3 |
-| Docs | springdoc OpenAPI | 3.0.2 |
-| Build | Maven (multi-module) | — |
-| CI/CD | Jenkins — declarative pipeline per service | — |
-| Health checks | Spring Boot Actuator | 4.1.0 |
-| Tracing | OpenTelemetry via Micrometer Tracing | — |
-| Trace UI | Jaeger — OTLP/HTTP ingest | 2.20.0 |
-| Logging | Log4j2 — replaces Logback | — |
-| Scheduling | Spring `@Scheduled` + ShedLock (JDBC template provider) | 7.10.1 |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-ecommerce-microservices/
-├── ecommerce-parent/      Maven parent — dependency & plugin management
-├── utility-service/       Shared library: security starter + common contracts
-├── discovery-server/      Eureka registry                      :8761
-├── gateway/               API gateway, reactive                :9999
-├── auth-service/          Credentials, JWT issuance            :9091
-├── user-service/          Profiles, roles, permissions         :9092
-├── config-server/         Spring Cloud Config (scaffolded)     :8080
-├── docker-compose.yml     Jaeger — local tracing backend
-└── docs/                  Engineering documentation
+ecommerce-microservice/
+├── ecommerce-parent/    Maven parent — dependency and plugin management (build from here)
+├── utility-service/     Shared library: security starter + common contracts
+├── discovery-server/    Eureka registry
+├── gateway/             API gateway (reactive)
+├── auth-service/        Credentials, JWT, refresh tokens, scheduled cleanup
+├── user-service/        Profiles, roles, permissions
+├── product-service/     Product catalogue (scaffolded)
+├── ai-service/          AI assistant — LangChain4j
+├── config-server/       Spring Cloud Config (scaffolded)
+└── docs/                Deep-dive documentation
 ```
 
-> The Maven reactor lives in `ecommerce-parent/pom.xml` — there is no root `pom.xml`.
-
-Each deployable service also carries its own `Jenkinsfile`, so its build and deployment live beside
-the code they ship.
-
-Every business service follows the same internal layout:
+Each business service uses the same layers:
 
 ```
-controller/  → service/ (interface) → service/impl/ → repositories/ → entity/
-                                          ↕
-                              dto/ ←→ mapper/ (MapStruct)
+controller → service (interface) → service/impl → repositories → entity
+                         ↕
+                 dto ←→ mapper (MapStruct)
 ```
 
 ---
 
-## 🔁 CI/CD — Jenkins
+## 📚 Documentation
 
-Every service builds, deploys, and verifies itself. There is **one pipeline per module**, each
-defined by a `Jenkinsfile` committed next to the code it builds — so the deployment process is
-versioned, reviewed, and diffed like any other source file.
+The README stays short; the details live in [`docs/`](docs):
 
-| Pipeline | What it deploys | Port | Profile |
-|---|---|---|---|
-| `discovery-server` | Eureka registry | 8761 | `dev` |
-| `config-server` | Spring Cloud Config | 8888 | `native` |
-| `auth-service` | Credentials, JWT issuance | 9091 | `dev` |
-| `user-service` | Profiles, roles, permissions | 9092 | `dev` |
-| `gateway` | Reactive edge | 9999 | `dev` |
-
-### Change one service, redeploy one service
-
-A GitHub webhook notifies Jenkins on every push, and each job subscribes to it through **GitHub hook
-trigger for GITScm polling** in its own configuration. Each job is then **scoped to its own module
-path**, so a commit that touches `auth-service`
-rebuilds and redeploys `auth-service` alone — the other four instances keep serving traffic, never
-restart, and never appear in the build history for that change.
-
-Shared code is part of that scope. Three services also watch `utility-service` and
-`ecommerce-parent`, because a change to the shared security starter or to dependency management
-genuinely does affect what they ship:
-
-| Job | Rebuilds when these paths change |
+| Guide | What it covers |
 |---|---|
-| `auth-service` | `auth-service/` · `utility-service/` · `ecommerce-parent/` |
-| `user-service` | `user-service/` · `utility-service/` · `ecommerce-parent/` |
-| `gateway` | `gateway/` · `utility-service/` · `ecommerce-parent/` |
-| `discovery-server` | `discovery-server/` · `ecommerce-parent/` |
-| `config-server` | `config-server/` |
-
-That path filter is the job's *Included Regions* (Git plugin → **Additional Behaviours → Polling
-ignores commits in certain paths**). Without it, one webhook would fan out into five simultaneous
-redeploys of a system where four of them changed nothing.
-
-### Pipeline stages
-
-```mermaid
-flowchart LR
-    A["Install<br/>parent POM"] --> B["Build<br/>utility-service"]
-    B --> C[Test]
-    C --> D[Package]
-    D --> E["Stop old<br/>instance"]
-    E --> F["Deploy<br/>jar"]
-    F --> G["Health<br/>check"]
-    G --> H([Green])
-```
-
-| Stage | What it does, and why it exists |
-|---|---|
-| **Install parent POM** | `mvn -N install` on `ecommerce-parent` — `-N` builds that POM only. The services resolve `utility-service` *from the local repository*, and reading its POM needs the parent there too, where `<relativePath>` no longer applies |
-| **Build utility-service** | `install -DskipTests` — publishes the shared security starter so the service about to build can resolve it. Skipped by `discovery-server` and `config-server`, which don't depend on it |
-| **Test** | `mvn clean test` — a failing test stops the pipeline before anything is deployed |
-| **Package** | `mvn package -DskipTests`, reusing the tests that just ran |
-| **Stop old instance** | `SIGTERM` first, so Spring Boot deregisters from Eureka and closes the DB pool cleanly; `SIGKILL` 15 s later for anything that ignored it, because a lingering process holds the port and the new instance cannot bind |
-| **Deploy jar** | Starts the new jar under `JENKINS_NODE_COOKIE=dontKillMe`, which stops Jenkins from reaping the process when the build ends |
-| **Health check** | Polls Actuator until the service reports `UP` — see below |
-
-Each job also sets `disableConcurrentBuilds()` (two deploys of the same service must never race for
-the same port) and `buildDiscarder` (keeps the last 15 builds).
-
-### Deploys are gated on health, not on a sleep
-
-The naive version of this — sleep 30 seconds, then check the process is alive — reports success for a
-service that started, threw on a failed migration, and is answering nothing. **A live JVM is not a
-working service.**
-
-```groovy
-sh 'curl -sf --retry 12 --retry-delay 5 --retry-connrefused http://localhost:$APP_PORT/actuator/health || { tail -n 100 /tmp/$MODULE.log; exit 1; }'
-```
-
-One command, covering every state a starting service passes through:
-
-| While the service is… | Actuator answers | curl does |
-|---|---|---|
-| Still booting, port closed | connection refused | retries (`--retry-connrefused`) |
-| Up, but a component is broken | `503` + `{"status":"DOWN"}` | retries — 503 is a transient error to curl |
-| Ready | `200` + `{"status":"UP"}` | exits 0 — **stage passes** |
-| Never ready | — | after 13 attempts over 60 s, `-f` exits non-zero, the last 100 log lines are printed, **build fails** |
-
-Because Actuator's health aggregates its indicators, the gate is genuinely meaningful: for
-`auth-service` and `user-service` it stays `DOWN` until Flyway has migrated and the PostgreSQL pool
-is live; for `gateway` it reflects the Eureka client, so a gateway that cannot resolve `lb://` routes
-never passes as healthy.
-
-Only the health endpoint is exposed —
-`management.endpoints.web.exposure.include=health` — and it is whitelisted in each service's
-`SecurityConfig` so the pipeline can poll it without a JWT. No other actuator endpoint is reachable.
-
----
-
-## 🔭 Distributed Tracing
-
-A single login touches three services: the gateway routes it, `auth-service` authenticates, and
-`auth-service` calls `user-service` for roles and permissions. That used to produce three unrelated
-log streams and no way to answer *which* hop was slow. It now produces **one trace**, every log line
-involved carries the id that leads back to it, and the caller gets that id handed back in the
-response.
-
-**Start the backend** — Jaeger runs from the repo root:
-
-```bash
-docker compose up -d
-```
-
-UI at **http://localhost:16686**. It speaks OTLP/HTTP natively on `:4318`, which is exactly where the
-services export — no separate collector in between.
-
-### What is instrumented
-
-`spring-boot-starter-opentelemetry` is on `gateway`, `auth-service`, and `user-service`. Micrometer
-Observation creates the spans; the OpenTelemetry bridge exports them over OTLP.
-
-| Hop | Where the span comes from |
-|---|---|
-| Client → gateway | Server-side observation on the reactive edge |
-| Gateway → `lb://AUTH-SERVICE` | Gateway routing filter, context forwarded downstream |
-| `auth-service` → `user-service` | `WebClient` client observation — see the gotcha below |
-| Request arriving at any service | Server-side observation, one per service |
-
-Context travels as the **W3C `traceparent` header**, so no service passes trace ids by hand.
-
-> **One starter, not three.** Most tracing guides tell you to add `micrometer-tracing-bridge-otel`
-> and `opentelemetry-exporter-otlp` by hand. That was the Boot 3.x recipe. Boot 4 collapsed them into
-> `spring-boot-starter-opentelemetry`, which pulls both at `runtime` scope. Declaring them explicitly
-> is redundant, and promotes the bridge to `compile` scope where application code can accidentally
-> import OpenTelemetry SDK classes directly.
-
-### Configuration
-
-Identical in all three services:
-
-| Property | Value | Why |
-|---|---|---|
-| `management.tracing.export.enabled` | `true` | Master switch for span export |
-| `management.tracing.export.otlp.enabled` | `true` | Selects the OTLP exporter |
-| `management.tracing.sampling.probability` | `1.0` | Sample every request. Right for development, far too expensive for production traffic |
-| `management.opentelemetry.tracing.export.otlp.endpoint` | `http://localhost:4318/v1/traces` | Jaeger's OTLP/HTTP ingest |
-
-Gateway only:
-
-| Property | Value | Why |
-|---|---|---|
-| `spring.reactor.context-propagation` | `auto` | See below — without it the gateway logs no trace ids at all |
-
-The service name in Jaeger is **not** configured — it is derived from `spring.application.name`, so
-services appear as `ECOMMERCE-GATEWAY`, `AUTH-SERVICE` and `USER-SERVICE` for free. Setting
-`management.opentelemetry.resource-attributes.service.name` to the same value would be redundant.
-
-> Property names moved in Boot 4. The 3.x guides say `management.otlp.tracing.endpoint`; that name
-> still resolves as a deprecated alias, so a copied snippet appears to work and you quietly end up
-> with two naming conventions in one file.
-
-### The reactive trap: `spring.reactor.context-propagation`
-
-On WebFlux the trace context lives in the **Reactor Context**, but MDC and `Tracer.currentSpan()`
-both read a **ThreadLocal**. Bridging the two requires Reactor's automatic context propagation, and
-Boot does not enable it by default:
-
-```java
-// ReactorAutoConfiguration, spring-boot-reactor 4.1.0
-ReactorAutoConfiguration(ReactorProperties properties) {
-    if (properties.getContextPropagation() == ContextPropagationMode.AUTO) {
-        Hooks.enableAutomaticContextPropagation();
-    }
-}
-```
-
-`spring.reactor.context-propagation` defaults to `limited`. Under it the gateway exports spans
-perfectly, they arrive in Jaeger, and **every log line still prints blank ids** — because nothing
-populates MDC on the event-loop thread. Nothing fails and nothing warns.
-
-Same jar, same request, one property changed:
-
-| `spring.reactor.context-propagation` | Gateway log line |
-|---|---|
-| `auto` | `[traceId=d64784a0d1213c7a3b6f4bb9b4e0f3ac] [spanId=ed95c3178ae32b2b]` |
-| `limited` *(default)* | `[traceId=] [spanId=]` |
-
-`auto` restores ThreadLocals around every operator, so it is not free — but it is the supported way
-to mix reactive code with any ThreadLocal-based API, tracing and MDC included. The MVC services
-(`auth-service`, `user-service`) do not need it for controller logging, since thread-per-request
-binds MDC naturally.
-
-### Logs carry the trace id
-
-The services run on **Log4j2** rather than Logback. `spring-boot-starter-logging` is excluded once in
-`ecommerce-parent` and `spring-boot-starter-log4j2` declared there in its place, so all reactor
-modules inherit it; classes use Lombok's `@Log4j2`.
-
-> A per-starter `<exclusion>` would not have been enough — nearly every Boot starter pulls
-> `spring-boot-starter` transitively, so Logback comes back through whichever one you missed. The
-> exclusion is declared in `<dependencyManagement>`, where it applies to every resolution path at
-> once.
-
-Boot's `logging.pattern.correlation` is a **Logback** property and does nothing here. On Log4j2 the
-ids are read straight out of MDC in `log4j2-spring.xml`:
-
-```xml
-<Property name="PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId=%X{traceId}] [spanId=%X{spanId}] %logger{36} - %msg%ex%n</Property>
-```
-
-Those two key names are not arbitrary. `Slf4JEventListener` in the OpenTelemetry bridge writes
-exactly `traceId` and `spanId` into MDC on every scope change, and `log4j-slf4j2-impl` maps SLF4J's
-MDC onto Log4j2's `ThreadContext` — which is what `%X` reads.
-
-```
-2026-08-23 12:12:21.239 [reactor-http-nio-3] WARN  [traceId=ad7fdf082a8b1066f13c590bcf483576] [spanId=3643c7ab7ca1af87] o.e.g.filter.JwtAuthenticationFilter - Gateway rejected POST /user-service/api/v1/users — [SEC-005] Authentication required
-```
-
-Paste that trace id into Jaeger's search box and the whole request comes back.
-
-**Startup lines always show `[traceId=] [spanId=]`, and that is correct** — there is no request in
-flight, so there is no trace to belong to. Only lines logged *inside* a request carry ids. Worth
-knowing before spending an afternoon debugging configuration that works.
-
-### Handing the trace id back to the client
-
-Every response carries the trace id of the request that produced it:
-
-```
-HTTP/1.1 401 Unauthorized
-X-Trace-Id: ad7fdf082a8b1066f13c590bcf483576
-```
-
-That is the *same* id as the log line above. One value ties together what the user saw, what the
-gateway logged, and the trace in Jaeger.
-
-**Why bother, when the trace is already in Jaeger?** Because of who is holding the evidence.
-
-Without it, a bug report is *"checkout failed around 3pm"*. Triage means guessing a time window,
-guessing the user, and grepping three services hoping to find the right request among thousands.
-With it, the report is *"checkout failed, reference `ad7fdf08…`"* — one paste into Jaeger returns
-that exact request, every hop, every timing.
-
-Three things make it worth the one header:
-
-- **The client is the only party present at every failure.** A timeout, a dropped connection or a
-  gateway-level rejection can leave little or nothing useful server-side. The caller always knows
-  something went wrong, and now it knows *which* request went wrong.
-- **It survives the handoff between humans.** The id goes into an error toast, a screenshot, a
-  support ticket, a Slack message. It turns "it's broken" into a primary key.
-- **It costs 32 hex characters.** A trace id is an opaque random identifier — no internal hostnames,
-  no schema, no user data, and it is not a credential.
-
-The implementation is a single `GlobalFilter`, and two details in it are load-bearing:
-
-```java
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)                                            // (1)
-public class TraceIdResponseFilter implements GlobalFilter {
-
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        exchange.getResponse().beforeCommit(() -> Mono.fromRunnable(() -> {   // (2)
-            Span span = tracer.currentSpan();
-            if (span != null) {
-                exchange.getResponse().getHeaders()
-                        .set(TRACE_ID_HEADER, span.context().traceId());
-            }
-        }));
-        return chain.filter(exchange);
-    }
-}
-```
-
-**(1) Ordering decides whether errors get the header.** `JwtAuthenticationFilter` rejects
-unauthenticated requests by returning a response *without* calling the chain, so any filter ordered
-after it never runs. Both filters originally sat at `HIGHEST_PRECEDENCE` — a tie, broken arbitrarily
-— and 401s came back with no trace id, which is precisely the response a user reports.
-`JwtAuthenticationFilter` now sits at `HIGHEST_PRECEDENCE + 1`.
-
-> `HIGHEST_PRECEDENCE - 1` is **not** the way to put something first.
-> `Ordered.HIGHEST_PRECEDENCE` is `Integer.MIN_VALUE`, so subtracting one overflows to
-> `Integer.MAX_VALUE` and sends the filter to the very back.
-
-**(2) The span is read in `beforeCommit`, not in the method body.** The body of `filter()` runs at
-*assembly* time, before the chain is ever subscribed — `tracer.currentSpan()` returns `null` there
-and the header is silently never written. `beforeCommit` runs inside the pipeline, late enough for
-the trace context to be on the thread but still before headers are flushed. The work goes inside
-`Mono.fromRunnable` rather than beside it, because the contract requires the action to be deferred so
-it sequences correctly against other commit callbacks.
-
-`set`, not `add`: a retried or redirected route would otherwise append a second value to the header.
-
-> Browser clients cannot read a custom response header cross-origin unless the server also sends
-> `Access-Control-Expose-Headers: X-Trace-Id`. Not configured yet — no browser front-end exists.
-
-### The gotcha: a hand-built `WebClient` silently ends the trace
-
-`auth-service` declares its own `WebClient.Builder` bean, because it needs a `@LoadBalanced` builder
-that also attaches the caller's bearer token. A builder created with `WebClient.builder()` is **not**
-Boot's auto-configured one, so it carries no observation instrumentation: the outgoing call leaves
-without a `traceparent` header, and `user-service` starts a brand-new trace with no link to the
-request that caused it. Nothing fails, nothing warns — the trace just stops at the boundary.
-
-In Boot 4 there is not even an auto-configured builder to inherit here: WebClient auto-configuration
-moved out of `spring-boot-starter-webflux` into `spring-boot-starter-webclient`, which is not on the
-classpath.
-
-One line fixes it, in `WebClientConfig`:
-
-```java
-@Bean
-@LoadBalanced
-public WebClient.Builder webClient(ObservationRegistry observationRegistry) {
-    return WebClient.builder()
-            .observationRegistry(observationRegistry)   // without this, the trace ends here
-            .filter(/* bearer-token propagation */);
-}
-```
-
-### Not covered yet
-
-- **Database spans** — needs `datasource-micrometer-spring-boot`. `user-service` is the only service doing real query work, and a slow query currently shows as unexplained time inside its server span
-- **OTLP metrics are being rejected** — the starter also pulls `micrometer-registry-otlp`, which POSTs metrics to `:4318/v1/metrics` every minute; Jaeger serves traces only. Set `management.otlp.metrics.export.enabled=false`, or put a real collector in front
-- **Custom spans** — `@Observed` needs `management.observations.annotations.enabled=true` (off by default) plus `aspectjweaver`; present in `auth-service` and `user-service`, absent in `gateway`
-- **Log shipping** — log lines carry trace ids, but nothing collects them; joining logs to a trace is still manual (ELK is on the roadmap)
-- **Sampling strategy** — `1.0` everywhere; production needs a lower rate, or tail-based sampling at a collector
-- **`discovery-server` and `config-server`** — not instrumented, though both log with the same `%X{traceId}` pattern, so their id slots are permanently blank
-
----
-
-## ⏱️ Scheduled Jobs — ShedLock
-
-Refresh tokens are persisted, and every login, refresh and logout leaves revoked or expired rows
-behind. Nothing ever read them again, but nothing removed them either — so `refresh_tokens` only
-grew. `auth-service` now runs a scheduled cleanup that deletes them.
-
-The catch is that `@Scheduled` has **no idea other instances exist**. Run two copies of
-`auth-service` behind the load balancer and both fire at midnight, both scan the same rows, and both
-try to delete them. For a cleanup job that is wasted work and lock contention; for a job that sends
-emails or charges cards it would be a real defect. ShedLock fixes this with a lock row in the
-service's own database.
-
-### How the lock works
-
-```mermaid
-sequenceDiagram
-    participant A as auth-service #1
-    participant B as auth-service #2
-    participant DB as PostgreSQL (shedlock)
-
-    Note over A,B: 00:00 — both schedulers fire
-    A->>DB: UPDATE shedlock SET lock_until = now()+8m<br/>WHERE name = ? AND lock_until <= now()
-    B->>DB: same UPDATE
-    DB-->>A: 1 row — lock acquired
-    DB-->>B: 0 rows — lock held elsewhere
-    Note over B: skips this run (does not wait)
-    A->>A: delete expired tokens in batches
-    A->>DB: release: lock_until = max(now, lock_at + 2m)
-```
-
-Acquiring the lock is a single conditional `UPDATE` (an `INSERT` the very first time). The database
-guarantees only one instance can win it. The losers **skip** the run rather than queue behind it — the
-next trigger is the next chance.
-
-### Components
-
-| Piece | Where | Role |
-|---|---|---|
-| `ShedLockConfig` | `auth-service/.../config/ShedLockConfig.java` | `@EnableScheduling` + `@EnableSchedulerLock`, and a `JdbcTemplateLockProvider` on the service's `DataSource` |
-| `shedlock` table | `V2026.10.27.11.50__shedlock_schema.sql` | One row per lock name — created by Flyway like every other table |
-| `ExpiredRefreshTokenCleanupJob` | `auth-service/.../job/ExpiredRefreshTokenCleanupJob.java` | The scheduled method, wrapped in `@SchedulerLock` |
-| `TokenService.removeRefreshTokenByBatch` | `auth-service/.../service/impl/TokenServiceImpl.java` | Deletes revoked (`active = false`) or expired rows, one page at a time, until none are left |
-| Dependencies | `ecommerce-parent/pom.xml` | `shedlock-spring` + `shedlock-provider-jdbc-template`, version pinned by `shedlock.version` |
-
-```java
-@Scheduled(cron = "0 0 0 * * Sat,Sun")
-@SchedulerLock(name = "expiredRefreshTokenCleanup", lockAtMostFor = "8m", lockAtLeastFor = "2m")
-public void cleanExpiredRefreshTokens() {
-    tokenService.removeRefreshTokenByBatch(batchSize);
-}
-```
-
-### Configuration
-
-| Setting | Value | Why |
-|---|---|---|
-| `cron` | `0 0 0 * * Sat,Sun` | Midnight on Saturday and Sunday, in the server's time zone — low-traffic windows |
-| `lockAtMostFor` | `8m` | Safety net: if the instance holding the lock dies mid-run, the lock expires on its own instead of blocking the job forever |
-| `lockAtLeastFor` | `2m` | Keeps the lock even if the job finishes in milliseconds, so an instance whose trigger fires slightly late cannot start a second run |
-| `defaultLockAtMostFor` | `10m` | Applies to any future `@SchedulerLock` that does not set its own |
-| `usingDbTime()` | on | Lock timestamps come from PostgreSQL's clock, not each JVM's — clock drift between hosts cannot hand the lock to two instances |
-| `expired.batch` | `100` (default) | Rows deleted per round trip; override in properties for larger tables |
-
-> **The lock name is mandatory.** `@SchedulerLock` without `name` compiles and starts cleanly, but
-> ShedLock throws `lock name can not be empty` every time the job fires — the job never runs and
-> nothing fails at startup. The name is also the primary key in `shedlock`, so two jobs must never
-> share one.
-
-> **`lockAtMostFor` must be longer than the job.** If a run outlasts it, the lock expires while the
-> job is still going and another instance can start the same work. Size it against the slowest
-> realistic run, not the typical one.
-
-### Not covered yet
-
-- **Only `auth-service` schedules anything** — other services get the dependency through the parent POM but have no lock provider or `shedlock` table
-- **No job metrics or alerting** — a run that fails or is skipped is visible only in the logs
-- **Time zone is implicit** — the cron runs in the JVM's default zone; `@Scheduled(zone = ...)` would make it explicit
-- **No tests** — lock acquisition across two instances is not covered by an integration test yet
+| [Security Model](docs/security.md) | Token claims, refresh-token design, the two credential types |
+| [CI/CD — Jenkins](docs/ci-cd.md) | Per-service pipelines, path-scoped triggers, health-gated deploys |
+| [Observability](docs/observability.md) | OpenTelemetry setup, trace ids in logs and responses, reactive pitfalls |
+| [Scheduled Jobs — ShedLock](docs/scheduling.md) | How the distributed lock works, timing settings, gotchas |
+| [AI Assistant — LangChain4j](docs/ai-assistant.md) | Tool calling, agents, memory, and the security design |
 
 ---
 
 ## 🎯 Engineering Practices
 
-Rather than list principles, here is what they look like in this codebase:
-
-**Reusable auto-configuration.** `utility-service` ships a
-`META-INF/spring/…AutoConfiguration.imports` descriptor. A new service adds one dependency and gets
-JWT validation, claim extraction, and the authentication entry point — no configuration. Every bean
-is `@ConditionalOnMissingBean`, so a service can override one without forking the library.
-
-**Error codes over error strings.** Exceptions carry an `ErrorCode` (code + message + HTTP status).
-`GlobalExceptionHandler` maps any `BusinessException` to the correct response automatically, and
-clients branch on a stable code rather than parsing prose.
-
-**Shared route constants.** Endpoint paths live in one place and are consumed by both the
-controllers that serve them and the HTTP-interface clients that call them — so a path change is a
-compile error, not a 404 in production.
-
-**Migrations own the schema.** `ddl-auto=none` everywhere. Hibernate never alters a table, so
-entity/schema drift surfaces at startup instead of silently mutating a database.
-
-**Documented defects.** [`docs/issues.md`](docs/issues.md) is a running, severity-ranked defect log
-with file/line references and remediation notes — reviewed and updated each sprint.
-
-**Enterprise Git workflow.**
-
-```
-main ← stage ← qa ← dev ← feature/*
-```
-
-| Branch | Purpose |
-|---|---|
-| `main` | Production-ready |
-| `stage` | Pre-production |
-| `qa` | Testing & QA |
-| `dev` | Active development |
-| `feature/*` | One branch per ticket, merged via PR after review |
+- **Shared route constants** — controllers and the HTTP clients that call them use the same path
+  constants, so a renamed path is a compile error, not a 404.
+- **Migrations own the schema** — Hibernate never alters a table; schema drift fails at startup.
+- **Error codes, not error strings** — exceptions carry an `ErrorCode` (code, message, HTTP status).
+- **Pipelines as code** — every service's `Jenkinsfile` sits beside its code and is reviewed like it.
+- **Branching model** — `feature/* → dev → qa → stage → main`, one feature branch per ticket, merged
+  by pull request after review.
 
 ---
 
 ## 🗺️ Roadmap
 
-### Authentication — near complete
+**Authentication** — ✅ registration · ✅ login · ✅ refresh rotation · ✅ RBAC · ✅ logout ·
+⬜ email verification & password reset · ⬜ RS256 signing with JWKS
 
-- [x] Shared security infrastructure & auto-configuration
-- [x] User registration with BCrypt
-- [x] Login with JWT issuance
-- [x] Refresh token with rotation and revocation
-- [x] Role-based access control
-- [x] Scheduled cleanup of expired refresh tokens, locked with ShedLock
-- [ ] Logout / token blacklist
-- [ ] Email verification & password reset
-- [ ] Asymmetric signing (RS256 + JWKS)
+**AI assistant** — ✅ service + LangChain4j + OpenAI setup · ⬜ chat endpoint · ⬜ `@Tool` wrappers
+over service APIs · ⬜ specialist agents + a router agent · ⬜ per-user conversation memory ·
+⬜ gateway route · ⬜ RAG over the product catalogue · ⬜ guardrails and usage limits
 
-### Platform hardening — next
+**Platform hardening** — ✅ Jenkins CI/CD · ✅ health-gated deploys · ✅ ShedLock scheduling ·
+⬜ integration tests with Testcontainers · ⬜ externalised secrets + Config Server ·
+⬜ Resilience4j · ⬜ gateway rate limiting · ⬜ Docker Compose · ⬜ zero-downtime deploys
 
-- [x] Jenkins CI/CD — one pipeline per service, triggered by module path
-- [x] Actuator health gate on every deploy
-- [ ] Integration tests with Testcontainers
-- [ ] Externalized secrets + working Config Server
-- [ ] Resilience4j: timeouts, circuit breakers, bulkheads
-- [ ] API rate limiting at the gateway
-- [ ] Docker Compose for local orchestration
-- [ ] Blue/green or rolling deploys — the current pipeline has a short restart gap
+**Business services** — 🧱 product · ⬜ category & inventory · ⬜ cart, order, payment · ⬜ notification
 
-### Business services
-
-- [ ] Product · Category · Inventory
-- [ ] Cart · Order · Payment
-- [ ] Notification
-
-### Scale & observability
-
-- [ ] Kafka event streaming + transactional outbox
-- [ ] Redis caching
-- [x] Distributed tracing (OpenTelemetry → Jaeger)
-- [ ] Prometheus & Grafana
-- [ ] Centralized logging (ELK)
-- [ ] Kubernetes deployment on AWS
+**Scale & observability** — ✅ distributed tracing · ⬜ Kafka + transactional outbox · ⬜ Redis
+caching · ⬜ Prometheus & Grafana · ⬜ centralised logging (ELK) · ⬜ Kubernetes on AWS
 
 ---
 
@@ -810,6 +333,4 @@ main ← stage ← qa ← dev ← feature/*
 
 **Tarique Hayat** — Backend Engineer
 
-Java · Spring Boot · Spring Cloud · Microservices · PostgreSQL · Spring Security · Software Architecture
-
-> *Building enterprise-grade backend systems one sprint at a time.*
+Java · Spring Boot · Spring Cloud · Microservices · PostgreSQL · Spring Security · LangChain4j

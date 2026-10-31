@@ -47,4 +47,20 @@ target/
 
 # Env
 .env
+.env.*
+
+# Maven wrapper (builds run through ecommerce-parent with plain mvn)
+mvnw
+mvnw.cmd
+**/.mvn/
+
+# Logs
+log/
+logs/
+
+# Local documents and Office lock files
+*.docx
+*.doc
+*.xlsx
+~$*
 

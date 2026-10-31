@@ -17,7 +17,7 @@ public class ExpiredRefreshTokenCleanupJob {
     @Value("${expired.batch:100}")
     private int batchSize;
 
-    @Scheduled(cron = "0 0 0 * * Sat,Sun")
+    @Scheduled(cron = "0 0 0 * * Sat,Sun",zone = "Asia/Kolkata")
     @SchedulerLock(name = "cleanExpiredRefreshTokensJob", lockAtMostFor = "8m",lockAtLeastFor = "2m")
     public void cleanExpiredRefreshTokensJob() {
         log.info("Expired Refresh Tokens Cleanup Job Started");

@@ -86,10 +86,16 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void removeRefreshTokenByBatch(int batchSize) {
         List<RefreshTokenEntity> entities = null;
-        do {
-            entities = tokenRepository.findAllByBatch(PageRequest.of(0, batchSize));
-            tokenRepository.deleteAllInBatch(entities);
-        } while (!entities.isEmpty());
+
+        try {
+
+            do {
+                entities = tokenRepository.findAllByBatch(PageRequest.of(0, batchSize));
+                tokenRepository.deleteAllInBatch(entities);
+            } while (!entities.isEmpty());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
     /**
