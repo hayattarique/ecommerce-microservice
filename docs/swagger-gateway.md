@@ -1,10 +1,10 @@
-# API Gateway se saare Swagger kaise chalayein (Hinglish, saral guide)
+# Swagger for all services through the API Gateway
 
-## Goal kya hai?
+## What is the goal?
 
-Frontend developer ko **sirf ek URL** chahiye (gateway, port 9999). Us ek jagah se wo
-saari microservices ke APIs dekh sake aur test kar sake. Har service ka port (9091, 9092,
-9093) bahar kholne ki zarurat nahi.
+A frontend developer needs **one URL** (the gateway, port 9999). From that one place they can
+read and test the APIs of every microservice. We do not need to open the port of each service
+(9091, 9092, 9093) to the outside.
 
 ```
 http://localhost:9999/swagger-ui.html
@@ -12,45 +12,45 @@ http://localhost:9999/swagger-ui.html
 
 ---
 
-## 1. Ye kaam kaise karta hai? (pehle idea samjho)
+## 1. How does it work? (understand this first)
 
-- **Swagger UI ka page** sirf gateway dikhata hai.
-- **API docs (OpenAPI JSON)** har service khud banati hai, `/v3/api-docs` par.
-- Gateway apne existing route se us service ka `/v3/api-docs` laata hai.
+- Only the **gateway** shows the Swagger UI page.
+- Each **service** creates its own API description (OpenAPI JSON) at `/v3/api-docs`.
+- The gateway fetches that description from each service, using the routes it already has.
 
 ```
-Browser ──► gateway:9999/swagger-ui.html                 (UI page, gateway se)
+Browser ──► gateway:9999/swagger-ui.html                 (the UI page, from the gateway)
 Browser ──► gateway:9999/auth-service/v3/api-docs    ──► auth-service:9091/v3/api-docs
 Browser ──► gateway:9999/user-service/v3/api-docs    ──► user-service:9092/v3/api-docs
 Browser ──► gateway:9999/product-service/v3/api-docs ──► product-service:9093/v3/api-docs
 ```
 
-Gateway route me `StripPrefix=1` hai, matlab pehla part (`/auth-service`) hat jata hai,
-aur service ko sirf `/v3/api-docs` milta hai.
+The gateway route uses `StripPrefix=1`. This removes the first part of the path
+(`/auth-service`), so the service only receives `/v3/api-docs`.
 
-**Dropdown kahan se aata hai?**
-Swagger UI ke upar "Select a definition" dropdown hai. Ye step 3 ki list se banta hai.
-Har entry = ek **name** + ek **docs URL**. Naya service add karna hai to bas ek entry aur
-jodo.
+**Where does the dropdown come from?**
+At the top of the Swagger UI there is a dropdown called "Select a definition". It is built from
+the list in Step 3. Each item in the list has one **name** and one **docs URL**. To add a new
+service to the dropdown, add one more item to that list.
 
 ---
 
-## 2. Kaun si problem, kaun sa step
+## 2. Which problem does each step fix?
 
-| Problem | Kaun sa step theek karta hai |
+| Problem | Step that fixes it |
 |---|---|
-| Gateway me Swagger UI hi nahi hai | Step 1 (dependency) |
-| Service ka gateway route nahi hai | Step 2 (route) |
-| Dropdown me services nahi dikh rahi | Step 3 (URL list) |
-| Docs par 401 aa raha hai (gateway me) | Step 4 (gateway whitelist) |
-| Docs par 401 aa raha hai (service me) | Step 5 (service whitelist) |
-| "Try it out" service ke port par ja raha hai | Step 6 (forwarded headers) |
+| The gateway has no Swagger UI | Step 1 (add dependency) |
+| A service has no gateway route | Step 2 (add route) |
+| The services do not appear in the dropdown | Step 3 (add URL list) |
+| Docs return 401 at the gateway | Step 4 (gateway whitelist) |
+| Docs return 401 inside a service | Step 5 (service whitelist) |
+| "Try it out" calls the service port instead of the gateway | Step 6 (forwarded headers) |
 
 ---
 
-## 3. Steps
+## 3. The steps
 
-### Step 1: Gateway me Swagger UI ki dependency daalo
+### Step 1: Add the Swagger UI dependency to the gateway
 
 File: `gateway/pom.xml`
 
@@ -62,20 +62,19 @@ File: `gateway/pom.xml`
 </dependency>
 ```
 
-- **webflux** wala artifact hi lena hai, kyunki gateway reactive (WebFlux) hai.
-  Services me `webmvc-ui` hai, wo gateway me nahi chalega.
-- Parent pom sirf `webmvc` ka version manage karta hai, isliye yahan version likha hai.
-  `${swagger.version}` parent ki property hai (3.0.2), to sab modules same version par rahenge.
-- **Zaruri:** pom change karne ke baad IntelliJ me **Maven reload** karo (Maven tool window
-  me reload button), phir restart karo. Sirf restart karoge to purani classpath rahegi aur
-  UI 404 dega.
+- Use the **webflux** version. The gateway is a reactive (WebFlux) application. The services
+  use the `webmvc-ui` version, and it does not work in the gateway.
+- The parent pom only manages the version of the `webmvc` library, so we write the version here.
+  `${swagger.version}` comes from the parent pom (3.0.2), so every module uses the same version.
+- **Important:** after you change a pom file, **reload Maven in IntelliJ** (use the reload button
+  in the Maven window) and then restart the app. If you only restart, IntelliJ keeps the old
+  libraries and the Swagger page shows a 404 error.
 
-### Step 2: Har service ka gateway route hona chahiye
+### Step 2: Make sure every service has a gateway route
 
-Files: `gateway/src/main/resources/application-local.properties` aur `application-dev.properties`
+Files: `gateway/src/main/resources/application-local.properties` and `application-dev.properties`
 
-User-service aur auth-service ke routes pehle se the. Product-service ka nahi tha, to ye
-add kiya:
+user-service and auth-service already had routes. product-service did not, so we added this:
 
 ```properties
 spring.cloud.gateway.server.webflux.routes[2].id=PRODUCT-SERVICE
@@ -84,12 +83,12 @@ spring.cloud.gateway.server.webflux.routes[2].predicates[0]=Path=/product-servic
 spring.cloud.gateway.server.webflux.routes[2].filters[0]=StripPrefix=1
 ```
 
-Har line ka matlab:
-- `uri=lb://PRODUCT-SERVICE`: Eureka me service dhundo aur load-balance karo.
-- `Path=/product-service/**`: jo bhi URL `/product-service/` se shuru ho.
-- `StripPrefix=1`: `/product-service` hata ke service ko bhejo.
+What each line means:
+- `uri=lb://PRODUCT-SERVICE`: find the service in Eureka and share the load between instances.
+- `Path=/product-service/**`: match every URL that starts with `/product-service/`.
+- `StripPrefix=1`: remove `/product-service` before sending the request to the service.
 
-### Step 3: Dropdown ki list banao
+### Step 3: Create the dropdown list
 
 File: `gateway/src/main/resources/application.properties`
 
@@ -102,12 +101,13 @@ springdoc.swagger-ui.urls[2].name=product-service
 springdoc.swagger-ui.urls[2].url=/product-service/v3/api-docs
 ```
 
-- `name`: dropdown me jo text dikhega.
-- `url`: UI is URL se docs laata hai. Ye **gateway ka path** hai (step 2 ke route se
-  guzarta hai), service ka port nahi.
-- Gateway ye list `/v3/api-docs/swagger-config` par deta hai, aur UI usi se dropdown banata hai.
+- `name`: the text shown in the dropdown.
+- `url`: where the UI loads the docs from. This is a **gateway path** (it uses the route from
+  Step 2). It is not the service's own port.
+- The gateway publishes this list at `/v3/api-docs/swagger-config`. The UI reads it to build
+  the dropdown.
 
-### Step 4: Gateway ke JWT filter se docs ko bahar rakho
+### Step 4: Let the docs pass the gateway's JWT filter
 
 File: `gateway/src/main/java/org/ecommerce/gateway/constant/OpenEndpoint.java`
 
@@ -117,129 +117,130 @@ File: `gateway/src/main/java/org/ecommerce/gateway/constant/OpenEndpoint.java`
 "/product-service/v3/api-docs"
 ```
 
-- `JwtAuthenticationFilter` har request par token maangta hai, sirf is set ke paths chhod ke.
-- Browser docs bina token ke maangta hai. Ye paths nahi daaloge to `401 SEC-005` aayega.
-- Filter `startsWith` use karta hai, isliye `/v3/api-docs/swagger-config` jaise sub-paths bhi cover ho jaate hain.
-- Sirf docs khule hain. Asli APIs (jaise `/user-service/api/v1/...`) ke liye JWT abhi bhi zaruri hai.
-- Swagger UI page (`/swagger-ui.html`) ke liye entry nahi chahiye, kyunki wo gateway khud
-  serve karta hai (filter sirf routed requests par chalta hai).
+- `JwtAuthenticationFilter` asks for a token on every request, except for the paths in this list.
+- The browser loads the docs without a token. If these paths are missing, the gateway returns
+  `401 SEC-005`.
+- The filter uses `startsWith`, so sub-paths such as `/v3/api-docs/swagger-config` are covered too.
+- Only the docs are open. The real APIs (for example `/user-service/api/v1/...`) still need a JWT.
+- The Swagger page itself (`/swagger-ui.html`) needs no entry. The gateway serves it directly,
+  and the filter only runs on requests that are routed to a service.
 
-### Step 5: Har service ki apni security me docs allow karo
+### Step 5: Allow the docs in each service's own security
 
-Har service ki apni Spring Security hai, wahan bhi docs allow karne padte hain.
+Each service has its own Spring Security, so the docs must be allowed there too.
 
-| Service | Kya karna pada |
+| Service | What we did |
 |---|---|
-| auth-service | Kuch nahi. `SecurityConfig` me `/v3/api-docs/**` pehle se tha. |
-| user-service | `SecurityConfig` ke `WHITE_LIST` me `"/v3/api-docs", "/v3/api-docs/**"` add kiya. |
-| product-service | Isme koi `SecurityFilterChain` hi nahi tha, to Spring ka default sab kuch lock kar raha tha (token ke saath bhi 401). Naya `config/SecurityConfig.java` banaya: health aur docs open, baaki sab ke liye JWT. |
+| auth-service | Nothing. Its `SecurityConfig` already allowed `/v3/api-docs/**`. |
+| user-service | Added `"/v3/api-docs", "/v3/api-docs/**"` to `WHITE_LIST` in `SecurityConfig`. |
+| product-service | It had **no** `SecurityFilterChain`, so Spring's default rules locked every URL (401 even with a token). We added a new `config/SecurityConfig.java`: health and docs are open, everything else needs a JWT. |
 
-### Step 6: "Try it out" gateway par call kare, service ke port par nahi
+### Step 6: Make "Try it out" call the gateway
 
-Default me har service apne docs me **apna address** likhti hai:
-`"servers": [{"url": "http://localhost:9091"}]`. Fir "Try it out" 9091 par jayega, jo hum
-band rakhna chahte hain. Isko do properties se theek karte hain.
+By default, each service writes **its own address** in its docs:
+`"servers": [{"url": "http://localhost:9091"}]`. Then "Try it out" would send requests to port
+9091, which is the port we want to keep closed. Two settings fix this.
 
-**Gateway me** (`application-local.properties` aur `application-dev.properties`):
+**In the gateway** (`application-local.properties` and `application-dev.properties`):
 
 ```properties
 spring.cloud.gateway.server.webflux.trusted-proxies=.*
 ```
 
-Is gateway version me jab tak proxy trusted na ho, wo `X-Forwarded-Host/Proto/Prefix`
-headers service ko nahi bhejta. `.*` ka matlab sab trusted. Ye **sirf local/dev** ke liye
-theek hai. Stage/qa/prod me asli IP range ka regex do.
+In this gateway version, the gateway does not add the `X-Forwarded-Host`, `X-Forwarded-Proto` and
+`X-Forwarded-Prefix` headers unless a proxy is trusted. `.*` trusts everyone. This is fine for
+**local and dev only**. For stage, qa and prod, use a regex for the real proxy IP range.
 
-**Har service me** (`auth-service`, `user-service`, `product-service` ki `application.properties`):
+**In each service** (`application.properties` of `auth-service`, `user-service`, `product-service`):
 
 ```properties
 server.forward-headers-strategy=framework
 ```
 
-Isse service `X-Forwarded-*` headers padhti hai, to docs me server URL
-`http://localhost:9999/auth-service` aata hai, `http://localhost:9091` nahi.
+This makes the service read the `X-Forwarded-*` headers. The server URL in the docs then becomes
+`http://localhost:9999/auth-service` instead of `http://localhost:9091`.
 
-### Step 7: Service ke ports band karo (deployment)
+### Step 7: Close the service ports (deployment)
 
-Ye Spring ka kaam nahi, network ka kaam hai. Sirf 9999 bahar kholo. 9091 se 9094 ko
-sirf private network ke andar rakho (Docker port mapping, security group, firewall).
+This is a network task, not a Spring task. Open only port 9999 to the outside. Keep ports 9091 to
+9094 reachable only inside the private network (Docker port mapping, security group or firewall).
 
 ---
 
-## 4. Kaun si files badli
+## 4. Files that were changed
 
-| File | Kya badla |
+| File | What changed |
 |---|---|
-| `gateway/pom.xml` | `springdoc-openapi-starter-webflux-ui` dependency |
-| `gateway/src/main/resources/application.properties` | `springdoc.swagger-ui.urls[...]` list (dropdown) |
-| `gateway/.../application-local.properties`, `application-dev.properties` | product-service route, `trusted-proxies` |
-| `gateway/.../constant/OpenEndpoint.java` | docs paths JWT check se bahar |
-| `user-service/.../config/SecurityConfig.java` | `/v3/api-docs` whitelist |
-| `product-service/.../config/SecurityConfig.java` | nayi file, docs whitelisted |
-| `auth-service`, `user-service`, `product-service` ki `application.properties` | `server.forward-headers-strategy=framework` |
+| `gateway/pom.xml` | Added the `springdoc-openapi-starter-webflux-ui` dependency |
+| `gateway/src/main/resources/application.properties` | Added the `springdoc.swagger-ui.urls[...]` list (the dropdown) |
+| `gateway/.../application-local.properties`, `application-dev.properties` | Added the product-service route and `trusted-proxies` |
+| `gateway/.../constant/OpenEndpoint.java` | Docs paths skip the JWT check |
+| `user-service/.../config/SecurityConfig.java` | Allowed `/v3/api-docs` |
+| `product-service/.../config/SecurityConfig.java` | New file, with the docs allowed |
+| `application.properties` of auth-service, user-service, product-service | Added `server.forward-headers-strategy=framework` |
 
 ---
 
-## 5. Check kaise karein
+## 5. How to check that it works
 
-1. Eureka, saari services aur gateway start karo.
-2. Browser me kholo: `http://localhost:9999/swagger-ui.html` (ye `/swagger-ui/index.html` par redirect hota hai).
-3. Upar "Select a definition" dropdown se service badlo.
-4. "Servers" box me `http://localhost:9999/<service>` dikhna chahiye.
+1. Start Eureka, all services and the gateway.
+2. Open `http://localhost:9999/swagger-ui.html`. It redirects to `/swagger-ui/index.html`.
+3. Use the "Select a definition" dropdown to switch between services.
+4. Look at the "Servers" box. It should show `http://localhost:9999/<service>`.
 
-Terminal se check:
+Checks from the terminal:
 
 ```bash
-curl localhost:9999/v3/api-docs/swagger-config          # dropdown ki list
-curl localhost:9999/auth-service/v3/api-docs            # 200
-curl localhost:9999/user-service/v3/api-docs            # 200
-curl -i localhost:9999/user-service/api/v1/users/me     # 401, asli API protected hai
+curl localhost:9999/v3/api-docs/swagger-config          # the dropdown list
+curl localhost:9999/auth-service/v3/api-docs            # should return 200
+curl localhost:9999/user-service/v3/api-docs            # should return 200
+curl -i localhost:9999/user-service/api/v1/users/me     # should return 401: real APIs stay protected
 ```
 
 ---
 
-## 6. Naya service add karna ho to
+## 6. Adding a new service later
 
-1. Gateway me uska route add karo (step 2).
-2. `springdoc.swagger-ui.urls[n]` me ek entry add karo (step 3).
-3. `OpenEndpoint` me `/<service>/v3/api-docs` add karo (step 4).
-4. Service ki security me `/v3/api-docs/**` whitelist karo (step 5).
-5. Service ke pom me `springdoc-openapi-starter-webmvc-ui` aur properties me
-   `server.forward-headers-strategy=framework` daalo.
+1. Add a gateway route for it (Step 2).
+2. Add one more `springdoc.swagger-ui.urls[n]` item (Step 3).
+3. Add `/<service>/v3/api-docs` to `OpenEndpoint` (Step 4).
+4. Allow `/v3/api-docs/**` in the service's security config (Step 5).
+5. Add `springdoc-openapi-starter-webmvc-ui` to the service's pom, and add
+   `server.forward-headers-strategy=framework` to its properties (Step 6).
 
 ---
 
-## 7. Jo problems aayi aur unke reason
+## 7. Problems we hit and their causes
 
-| Problem | Reason |
+| Problem | Cause |
 |---|---|
-| Gateway par `/swagger-ui.html` 404 | Springdoc jar running classpath me nahi tha. IntelliJ me Maven reload karo, phir restart. |
-| Gateway se docs par `401 SEC-005` | `OpenEndpoint` me path nahi tha (step 4). |
-| user-service ke docs par 401 | Uski `SecurityConfig` me `/v3/api-docs` nahi tha (step 5). |
-| product-service par seedha 9093 par bhi 401 | `SecurityFilterChain` nahi tha, Spring ka default laga (step 5). |
-| Gateway se docs par 503 | Service chal nahi rahi ya Eureka me registered nahi hai. |
-| "Servers" me `http://localhost:9091` dikh raha hai | Step 6 gateway ya service me chhoot gaya. |
-| product-service par `mvn compile` fail (lombok `1.6.3`) | Uske pom me `annotationProcessorPaths` ke lombok me `<version>` nahi hai. `<version>${lombok.version}</version>` add karo. (IntelliJ me chalta hai, sirf command line me dikkat aati hai.) |
+| `/swagger-ui.html` returns 404 on the gateway | The springdoc library was not in the running app's classpath. Reload Maven in IntelliJ, then restart. |
+| Docs return `401 SEC-005` through the gateway | The path is missing in `OpenEndpoint` (Step 4). |
+| user-service docs return 401 | `/v3/api-docs` is missing in its `SecurityConfig` (Step 5). |
+| product-service returns 401, even directly on port 9093 | It had no `SecurityFilterChain`, so Spring's default rules applied (Step 5). |
+| Docs return 503 through the gateway | The service is not running, or it is not registered in Eureka. |
+| The "Servers" box shows `http://localhost:9091` | Step 6 is missing in the gateway or in the service. |
+| `mvn compile` fails in product-service with lombok `1.6.3` | In its pom, the lombok entries inside `annotationProcessorPaths` have no `<version>`. Add `<version>${lombok.version}</version>`. IntelliJ builds fine, only the command line fails. |
 
 ---
 
-## 8. Production se pehle
+## 8. Before going to production
 
-- `trusted-proxies=.*` ko asli proxy range se badlo.
-- Prod me UI band karo: har `application-prod.properties` me
-  `springdoc.swagger-ui.enabled=false` aur `springdoc.api-docs.enabled=false`.
-- Abhi nahi hua: JWT ke liye **Authorize** button. Iske liye har service me `OpenAPI` bean
-  (bearer security scheme ke saath) chahiye. Abhi token header me haath se daalna padega.
+- Replace `trusted-proxies=.*` with the real proxy IP range.
+- Turn the UI off in prod: set `springdoc.swagger-ui.enabled=false` and
+  `springdoc.api-docs.enabled=false` in each `application-prod.properties`.
+- Not done yet: an **Authorize** button for the JWT. Each service would need an `OpenAPI` bean
+  with a bearer security scheme. For now, the token must be added by hand as a header.
 
 ---
 
-## 9. Kya test hua
+## 9. What was tested
 
-- Gateway ka Swagger UI browser me khulta hai, dropdown me auth-service, user-service aur
-  product-service dikhti hain.
-- Auth-service aur user-service ke docs gateway se load hote hain, server URL
-  `http://localhost:9999/<service>` hai.
-- Bina token ke asli API par 401 aata hai.
-- Step 5 ke baad product-service ke docs gateway se 200 aaye the. Aakhri check me wo band thi,
-  isliye wo run dobara nahi hua.
-- Test nahi hua: valid credentials se asli login, aur token ke saath "Try it out".
+- The gateway Swagger UI opens in a browser. The dropdown lists auth-service, user-service and
+  product-service.
+- The docs of auth-service and user-service load through the gateway. Their server URL is
+  `http://localhost:9999/<service>`.
+- A real API call without a token returns 401.
+- After Step 5, product-service docs returned 200 through the gateway. At the last check the
+  service was stopped, so that run was not repeated.
+- Not tested: a real login with valid credentials, and "Try it out" with a token.
