@@ -29,7 +29,7 @@ public class UserAdapter {
         log.info("CALLING USER-CLIENT GET-USER-BY-EMAIL {}", email);
 
         return required(internalClient.findUserByEmail(email, jwtPropertiesConfig.getApiKey()),
-                email, AuthErrorCode.USER_SERVICE_COMMUNICATION_FAILED);
+                email, AuthErrorCode.DOWNSTREAM_COMMUNICATION_FAILED);
     }
 
     public UserDto register(SignupRequest signupRequest) {

@@ -39,15 +39,15 @@ public enum AuthErrorCode implements ErrorCode {
             HttpStatus.NOT_FOUND
     ),
 
-    USER_SERVICE_UNAVAILABLE(
+    DOWNSTREAM_UNAVAILABLE(
             "AUTH_501",
-            "User service is temporarily unavailable.",
+            "A required service is temporarily unavailable.",
             HttpStatus.SERVICE_UNAVAILABLE
     ),
 
-    USER_SERVICE_COMMUNICATION_FAILED(
+    DOWNSTREAM_COMMUNICATION_FAILED(
             "AUTH_502",
-            "Unable to communicate with user service.",
+            "Unable to communicate with a required service.",
             HttpStatus.SERVICE_UNAVAILABLE
     ),
 
