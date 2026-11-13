@@ -51,6 +51,7 @@ public class SecurityConfig {
             "/api/v1/users/reset-password",
             "/actuator/health",
             "/actuator/health/**",
+            "/v3/api-docs", "/v3/api-docs/**",
     };
     private static final String INTERNAL = "/api/v1/internal/**" ;
 
