@@ -9,6 +9,7 @@ import org.ecommerce.auth.service.exception.DownstreamServiceException;
 import org.ecommerce.auth.service.util.AuthErrorCode;
 import org.ecommerce.utility.commons.constants.SecurityConstants;
 import org.ecommerce.utility.commons.contract.ErrorCode;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,7 +77,7 @@ public class RestClientConfig {
         return new RestClientHttpServiceGroupConfigurer() {
 
             @Override
-            public void configureGroups(Groups<RestClient.Builder> groups) {
+            public void configureGroups(@NonNull Groups<RestClient.Builder> groups) {
                 groups.forEachClient((group, builder) -> builder
                         .requestInterceptor(translateTransportFailures(group.name()))
                         .requestInterceptor(forwardCallerToken())
