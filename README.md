@@ -290,7 +290,8 @@ The README stays short; the details live in [`docs/`](docs):
 | Guide | What it covers |
 |---|---|
 | [Security Model](docs/security.md) | Token claims, refresh-token design, the two credential types |
-| [CI/CD — Jenkins](docs/ci-cd.md) | Per-service pipelines, path-scoped triggers, health-gated deploys |
+| [CI/CD — Jenkins](docs/ci-cd.md) | Per-service pipelines, path-scoped triggers (with the Jenkins UI setup checklist), health-gated deploys |
+| [Swagger via the Gateway](docs/swagger-gateway.md) | One Swagger UI on the gateway for every service, step by step |
 | [Observability](docs/observability.md) | OpenTelemetry setup, trace ids in logs and responses, reactive pitfalls |
 | [Scheduled Jobs — ShedLock](docs/scheduling.md) | How the distributed lock works, timing settings, gotchas |
 | [AI Assistant — LangChain4j](docs/ai-assistant.md) | Tool calling, agents, memory, and the security design |
