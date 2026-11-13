@@ -38,6 +38,68 @@ That path filter is the job's *Included Regions* (Git plugin → **Additional Be
 ignores commits in certain paths**). Without it, one webhook would fan out into five simultaneous
 redeploys of a system where four of them changed nothing.
 
+### Jenkins UI setup (per job) — checklist for the future
+
+This filter lives in each Jenkins job's settings, **not in the repo**, so a re-created job loses it.
+If every pipeline starts on one push, check these first.
+
+1. **GitHub → Settings → Webhooks:** payload URL `http://<jenkins-url>/github-webhook/`, event *push*.
+2. **Job → Configure → Build Triggers:** tick **GitHub hook trigger for GITScm polling**.
+3. **Job → Configure → Pipeline** (Definition *Pipeline script from SCM*) → **Additional Behaviours →
+   Add → Polling ignores commits in certain paths**.
+4. Put one regex per line in **Included Regions** (paths are relative to the repo root):
+
+**auth-service**
+```
+auth-service/.*
+utility-service/.*
+ecommerce-parent/.*
+```
+
+**user-service**
+```
+user-service/.*
+utility-service/.*
+ecommerce-parent/.*
+```
+
+**gateway**
+```
+gateway/.*
+utility-service/.*
+ecommerce-parent/.*
+```
+
+**discovery-server**
+```
+discovery-server/.*
+ecommerce-parent/.*
+```
+
+**config-server**
+```
+config-server/.*
+```
+
+`utility-service` is listed only for the three services that build against it. `discovery-server`
+needs `ecommerce-parent` but not `utility-service`; `config-server` installs neither. A new service
+(for example `product-service`, which has no Jenkinsfile yet) follows the same pattern:
+`<service>/.*`, `utility-service/.*`, `ecommerce-parent/.*`.
+
+Optional: add `docs/.*` to **Excluded Regions** so documentation-only commits redeploy nothing.
+
+**The three "Polling ignores commits…" behaviours**
+
+| Behaviour | Field | Use |
+|---|---|---|
+| …from certain users | *Excluded Users* | Ignore commits by a bot or release account |
+| …in certain paths | *Included / Excluded Regions* | Build only when this service's files changed (the one above) |
+| …with certain messages | *Excluded Message* (regex) | Skip builds for commits such as `.*\[skip ci\].*` |
+
+A build starts only if at least one commit in the push is not ignored by any behaviour. These
+filters apply to the **GitHub hook trigger for GITScm polling** trigger; a manual *Build now*, a
+periodic schedule or a PR-builder plugin bypasses them.
+
 ## Pipeline stages
 
 ```mermaid
