@@ -4,8 +4,7 @@ public enum GatewayErrorCode {
     INVALID_TOKEN("SEC-001", "Invalid JWT token"),
     TOKEN_EXPIRED("SEC-002", "JWT token expired"),
     INVALID_TOKEN_TYPE("SEC-003", "Invalid token type"),
-    MISSING_TOKEN("SEC-005", "Authentication required"),
-    INVALID_FINGERPRINT("SEC-006", "Token is not bound to this browser");
+    MISSING_TOKEN("SEC-005", "Authentication required");
 
     private final String code;
     private final String message;

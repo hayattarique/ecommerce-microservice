@@ -52,8 +52,6 @@ public class SecurityConfig {
             "/actuator/health",
             "/actuator/health/**",
             "/v3/api-docs", "/v3/api-docs/**",
-            // Spring forwards errors to /error internally; blocking it turns every 400/500 into a fake 401
-            "/error",
     };
     private static final String INTERNAL = "/api/v1/internal/**" ;
 
