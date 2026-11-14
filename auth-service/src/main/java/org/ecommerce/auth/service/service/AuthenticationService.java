@@ -2,7 +2,6 @@ package org.ecommerce.auth.service.service;
 
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
 import org.ecommerce.auth.service.dto.AuthenticationDto;
-import org.ecommerce.auth.service.dto.LogoutRequest;
 import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 
 public interface AuthenticationService {
@@ -23,12 +22,12 @@ public interface AuthenticationService {
      * @param request the refresh token request
      * @return the updated authentication response containing new access and refresh tokens
      */
-    AuthenticationDto refreshToken(RefreshTokenRequest request);
+    AuthenticationDto refreshToken(String refreshToken);
 
     /**
      * Logout user and invalidate refresh tokens and blacklist access tokens
      *
      * @param request the logout request
      */
-    void logout(LogoutRequest request);
+    void logout(String refreshToken);
 }

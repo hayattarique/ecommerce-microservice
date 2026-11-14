@@ -3,9 +3,9 @@ package org.ecommerce.auth.service.service.impl;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.catalina.util.StringUtil;
 import org.ecommerce.auth.service.dto.AuthenticationDto;
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
-import org.ecommerce.auth.service.dto.LogoutRequest;
 import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 import org.ecommerce.auth.service.exception.AuthenticationException;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import static org.ecommerce.utility.security.constants.JwtClaimConstants.EMAIL;
 import static org.ecommerce.utility.security.constants.JwtClaimConstants.USER_ACCOUNT_ID;
@@ -51,11 +52,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public AuthenticationDto refreshToken(RefreshTokenRequest request) {
+    public AuthenticationDto refreshToken(String refreshToken) {
         // step 1: validate refresh token
-        if (tokenService.validateRefreshToken(request.refreshToken())) {
+        if (tokenService.validateRefreshToken(refreshToken)) {
             // step 2: extract claims
-            Claims claims = jwtTokenValidator.validateTokenAndGetClaims(request.refreshToken());
+            Claims claims = jwtTokenValidator.validateTokenAndGetClaims(refreshToken);
             String email = claims.get(EMAIL, String.class);
 
             // step 3: get user details from user service
@@ -71,20 +72,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .build();
 
             // step 5: mark current refresh token invalid and generate new token
-            String refreshToken = tokenService.rotateRefreshToken(authenticatedUser, request.refreshToken());
+            String newRefreshToken = tokenService.rotateRefreshToken(authenticatedUser, refreshToken);
 
             // step 6: generate access token
             String accessToken = tokenService.generateAccessToken(authenticatedUser);
-            return new AuthenticationDto(authenticatedUser.getId(), accessToken, refreshToken);
+            return new AuthenticationDto(authenticatedUser.getId(), accessToken, newRefreshToken);
         }
         throw new AuthenticationException(AuthErrorCode.INVALID_REFRESH_TOKEN);
     }
 
     @Override
-    public void logout(LogoutRequest request) {
-        // step 1: validate refresh token
-        if (tokenService.validateRefreshToken(request.refreshToken())) {
-            Claims claims = jwtTokenValidator.validateTokenAndGetClaims(request.accessToken());
+    public void logout(String refreshToken) {
+
+        //step 1 refreshToken is null then return from here
+        if (!StringUtils.hasText(refreshToken)){
+            log.info("Logout without refresh token nothing to revoke {}",refreshToken);
+            return;
+        }
+
+
+        // step 2: validate refresh token
+        if (tokenService.validateRefreshToken(refreshToken)) {
+            Claims claims = jwtTokenValidator.validateTokenAndGetClaims(refreshToken);
             Long userAccountId = claims.get(USER_ACCOUNT_ID, Long.class);
             tokenService.revokeAllRefreshTokensForUser(userAccountId);
             return;

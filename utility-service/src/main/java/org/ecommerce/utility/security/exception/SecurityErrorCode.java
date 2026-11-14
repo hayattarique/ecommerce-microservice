@@ -26,6 +26,11 @@ public enum SecurityErrorCode implements ErrorCode {
             "Invalid token type",
             HttpStatus.UNAUTHORIZED
     ),
+    ACCESS_DENIED(
+            "SEC-005",
+            "You dont have permission to access this role",
+            HttpStatus.FORBIDDEN
+    ),
     INVALID_API_KEY(
             "SEC-004",
             "Invalid api key"
