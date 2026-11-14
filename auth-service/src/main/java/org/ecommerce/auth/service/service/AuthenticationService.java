@@ -2,8 +2,6 @@ package org.ecommerce.auth.service.service;
 
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
 import org.ecommerce.auth.service.dto.AuthenticationDto;
-import org.ecommerce.auth.service.dto.LogoutRequest;
-import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 
 public interface AuthenticationService {
 
@@ -20,15 +18,16 @@ public interface AuthenticationService {
     /**
      * Refresh user's access token using a valid refresh token
      *
-     * @param request the refresh token request
+     * @param refreshToken the refresh token from the cookie, or null when the cookie is absent
      * @return the updated authentication response containing new access and refresh tokens
      */
-    AuthenticationDto refreshToken(RefreshTokenRequest request);
+    AuthenticationDto refreshToken(String refreshToken);
 
     /**
-     * Logout user and invalidate refresh tokens and blacklist access tokens
+     * Logout user: revoke the user's refresh tokens. Idempotent - a missing, expired or
+     * already-revoked refresh token is not an error, there is simply nothing to revoke.
      *
-     * @param request the logout request
+     * @param refreshToken the refresh token from the cookie, or null when the cookie is absent
      */
-    void logout(LogoutRequest request);
+    void logout(String refreshToken);
 }

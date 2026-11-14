@@ -20,19 +20,19 @@ public class JwtTokenGeneratorImpl implements JwtTokenGenerator {
     private final SecretKey secretKey;
 
     @Override
-    public String generateAccessToken(AuthenticatedUser user) {
+    public String generateAccessToken(AuthenticatedUser user, String fingerprintHash) {
 
-        return buildToken(user, TokenType.ACCESS_TOKEN, jwtProperties.getExpiration());
+        return buildToken(user, TokenType.ACCESS_TOKEN, jwtProperties.getExpiration(), fingerprintHash);
     }
 
     @Override
     public String generateRefreshToken(AuthenticatedUser user) {
 
-        return buildToken(user, TokenType.REFRESH_TOKEN,jwtProperties.getRefreshExpiration());
+        return buildToken(user, TokenType.REFRESH_TOKEN, jwtProperties.getRefreshExpiration(), null);
     }
 
 
-    private String buildToken(AuthenticatedUser authenticatedUser, TokenType tokenType,long expiration) {
+    private String buildToken(AuthenticatedUser authenticatedUser, TokenType tokenType, long expiration, String fingerprintHash) {
 
         if (tokenType == TokenType.REFRESH_TOKEN) {
             return Jwts.builder()
@@ -51,6 +51,8 @@ public class JwtTokenGeneratorImpl implements JwtTokenGenerator {
                 .claim(ROLES, authenticatedUser.getRoles())
                 .claim(PERMISSIONS, authenticatedUser.getPermissions())
                 .claim(TOKEN_TYPE, tokenType)
+                // binds the access token to the browser's HttpOnly fingerprint cookie (checked by the gateway)
+                .claim(FINGERPRINT_HASH, fingerprintHash)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(secretKey).compact();
