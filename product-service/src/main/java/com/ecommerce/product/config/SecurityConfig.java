@@ -26,7 +26,9 @@ public class SecurityConfig {
     // gateway's Swagger UI can load them (the gateway already lets them through).
     private static final String[] WHITE_LIST = {
             "/actuator/health", "/actuator/health/**",
-            "/v3/api-docs", "/v3/api-docs/**"
+            "/v3/api-docs", "/v3/api-docs/**",
+            // Spring forwards errors to /error internally; blocking it turns every 400/500 into a fake 401
+            "/error"
     };
 
     @Bean

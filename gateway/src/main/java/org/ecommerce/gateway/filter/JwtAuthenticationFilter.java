@@ -10,6 +10,7 @@ import org.ecommerce.gateway.constant.SecurityConstants;
 import org.ecommerce.gateway.utils.ErrorResponse;
 import org.ecommerce.gateway.utils.GatewayErrorCode;
 import org.ecommerce.gateway.utils.JwtUtils;
+import org.ecommerce.gateway.utils.TokenFingerprintVerifier;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -34,6 +35,7 @@ import tools.jackson.databind.ObjectMapper;
 public class JwtAuthenticationFilter implements GlobalFilter {
 
     private final JwtUtils jwtUtils;
+    private final TokenFingerprintVerifier fingerprintVerifier;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -68,6 +70,11 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         // a refresh token is only valid at /auth/refresh-token, never as a credential
         if (!SecurityConstants.ACCESS_TOKEN.equals(claims.get(SecurityConstants.TOKEN_TYPE, String.class))) {
             return unauthorized(exchange, GatewayErrorCode.INVALID_TOKEN_TYPE);
+        }
+
+        // the token must come with the browser fingerprint cookie it was issued with (a copied token alone fails)
+        if (!fingerprintVerifier.matches(request, claims)) {
+            return unauthorized(exchange, GatewayErrorCode.INVALID_FINGERPRINT);
         }
 
         // auth-service writes this claim as a number — read it as Long, not String

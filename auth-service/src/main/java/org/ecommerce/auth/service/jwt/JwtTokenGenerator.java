@@ -6,10 +6,11 @@ public interface JwtTokenGenerator {
     /**
      * Generates a JWT token for the given authenticated user.
      *
-     * @param user the authenticated user
+     * @param user            the authenticated user
+     * @param fingerprintHash SHA-256 hash of the browser fingerprint, stored in the "fgp" claim
      * @return the generated JWT token
      */
-    String generateAccessToken(AuthenticatedUser user);
+    String generateAccessToken(AuthenticatedUser user, String fingerprintHash);
 
     /**
      * Generates a refresh JWT token for the given authenticated user.

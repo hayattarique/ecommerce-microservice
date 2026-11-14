@@ -1,6 +1,5 @@
 package org.ecommerce.auth.service.service;
 
-import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 import org.ecommerce.auth.service.entity.RefreshTokenEntity;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
 
@@ -9,11 +8,11 @@ public interface TokenService {
     /**
      * Generates an access token for the authenticated user.
      *
-     * @param user the authenticated user
+     * @param user            the authenticated user
+     * @param fingerprintHash SHA-256 hash of the browser fingerprint (see TokenFingerprint)
      * @return the generated access token
      */
-
-    String generateAccessToken(AuthenticatedUser user);
+    String generateAccessToken(AuthenticatedUser user, String fingerprintHash);
 
     /**
      * Generates a refresh token for the specified user.
