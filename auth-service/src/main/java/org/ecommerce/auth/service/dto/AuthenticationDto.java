@@ -11,6 +11,4 @@ public class AuthenticationDto {
     private Long id;
     private String token;
     private String refreshToken;
-    /** Raw browser fingerprint: goes ONLY into the HttpOnly fingerprint cookie, never into a body. */
-    private String fingerprint;
 }

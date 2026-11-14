@@ -19,9 +19,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.ecommerce.utility.security.config.JWTPropertiesConfig;
-
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,12 +32,11 @@ public class TokenServiceImpl implements TokenService {
     private final JwtTokenValidatorService jwtTokenValidator;
     private final RefreshTokenRepository tokenRepository;
     private final UserCredentialRepository credentialRepository;
-    private final JWTPropertiesConfig jwtProperties;
 
     @Override
-    public String generateAccessToken(AuthenticatedUser user, String fingerprintHash) {
+    public String generateAccessToken(AuthenticatedUser user) {
 
-        return jwtTokenGenerator.generateAccessToken(user, fingerprintHash);
+        return jwtTokenGenerator.generateAccessToken(user);
     }
 
     @Override
@@ -123,8 +119,7 @@ public class TokenServiceImpl implements TokenService {
         RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
         refreshTokenEntity.setUserAccountId(user.getUserAccountId());
         refreshTokenEntity.setToken(jwtTokenGenerator.generateRefreshToken(user));
-        // Same lifetime as the JWT's exp claim and the cookie's Max-Age (jwt.refresh-expiration, in ms)
-        refreshTokenEntity.setExpiredAt(LocalDateTime.now().plus(Duration.ofMillis(jwtProperties.getRefreshExpiration())));
+        refreshTokenEntity.setExpiredAt(LocalDateTime.now().plusDays(7)); // Set expiration to 7 days from now
         // just fetch reference it won't fire query
         UserCredentialEntity reference = credentialRepository.getReferenceById(user.getId());
         refreshTokenEntity.setUserCredential(reference);

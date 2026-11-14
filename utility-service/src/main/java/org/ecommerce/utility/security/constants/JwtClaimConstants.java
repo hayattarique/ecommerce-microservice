@@ -18,7 +18,4 @@ public class JwtClaimConstants {
     public static final String TOKEN_TYPE = "tokenType";
 
     public static final String USER_ACCOUNT_ID_HEADER = "X-Forward-User-Account-Id";
-
-    /** SHA-256 hash (hex) of the browser fingerprint; the raw fingerprint lives only in an HttpOnly cookie. */
-    public static final String FINGERPRINT_HASH = "fgp";
 }

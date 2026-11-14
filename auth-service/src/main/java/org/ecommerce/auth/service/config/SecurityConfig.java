@@ -23,8 +23,6 @@ public class SecurityConfig {
 
     private static final String[] WHITE_LIST_URL = { "/api/v1/auth/**", "/api/v1/open/**",
             "/actuator/health", "/actuator/health/**",
-            // Spring forwards errors to /error internally; blocking it turns every 400/500 into a fake 401
-            "/error",
             "/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources", "/swagger-resources/**",
             "/configuration/ui", "/configuration/security", "/swagger-ui/**", "/webjars/**", "/swagger-ui.html"};
 
