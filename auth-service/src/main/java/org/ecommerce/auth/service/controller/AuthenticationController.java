@@ -1,17 +1,18 @@
 package org.ecommerce.auth.service.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.ecommerce.auth.service.dto.AuthenticationRequest;
-import org.ecommerce.auth.service.dto.LogoutRequest;
-import org.ecommerce.auth.service.dto.RefreshTokenRequest;
-import org.ecommerce.auth.service.dto.SignupRequest;
+import org.ecommerce.auth.service.dto.*;
 import org.ecommerce.auth.service.service.AuthenticationService;
 import org.ecommerce.auth.service.service.RegistrationService;
+import org.ecommerce.auth.service.util.CookieFactory;
 import org.ecommerce.utility.commons.constants.ApiMessages;
 import org.ecommerce.utility.commons.constants.AuthMappingConstant;
 import org.ecommerce.utility.commons.util.ApiResponse;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final RegistrationService registrationService;
+    private final CookieFactory cookieFactory;
 
 
     @PostMapping(AuthMappingConstant.REGISTER)
@@ -44,18 +46,30 @@ public class AuthenticationController {
 
     @PostMapping(AuthMappingConstant.LOGIN)
     public ResponseEntity<ApiResponse<Object>> login(@Valid @RequestBody AuthenticationRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(authenticationService.authenticate(request), ApiMessages.LOGIN_SUCCESS));
+        return withRefreshCookie(authenticationService.authenticate(request),ApiMessages.LOGIN_SUCCESS);
     }
 
     @PostMapping(AuthMappingConstant.REFRESH_TOKEN)
-    public ResponseEntity<ApiResponse<Object>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(authenticationService.refreshToken(request), ApiMessages.OPERATION_SUCCESSFUL));
+    public ResponseEntity<ApiResponse<Object>> refreshToken(HttpServletRequest request) {
+
+        String refreshToken = cookieFactory.readCookie(request);
+        return withRefreshCookie(authenticationService.refreshToken(refreshToken),ApiMessages.OPERATION_SUCCESSFUL);
     }
 
     @PostMapping(AuthMappingConstant.LOGOUT)
-    public ResponseEntity<ApiResponse<Object>> logout(@Valid @RequestBody LogoutRequest request) {
-        authenticationService.logout(request);
-        return ResponseEntity.ok(ApiResponse.success(null, ApiMessages.LOGOUT_SUCCESS));
+    public ResponseEntity<ApiResponse<Object>> logout(HttpServletRequest request) {
+        String token = cookieFactory.readCookie(request);
+        authenticationService.logout(token);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookieFactory.clear().toString())
+                .cacheControl(CacheControl.noCache())
+                .body(ApiResponse.success(null,ApiMessages.LOGOUT_SUCCESS));
+    }
+
+    private ResponseEntity<ApiResponse<Object>> withRefreshCookie(AuthenticationDto dto,String message) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookieFactory.build(dto.getRefreshToken()).toString())
+                .cacheControl(CacheControl.noCache())
+                .body(ApiResponse.success(new TokenResponse(dto.getId(), dto.getToken()), message));
     }
 
 }

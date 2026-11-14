@@ -11,6 +11,7 @@ import org.ecommerce.auth.service.repositories.RefreshTokenRepository;
 import org.ecommerce.auth.service.repositories.UserCredentialRepository;
 import org.ecommerce.auth.service.service.TokenService;
 import org.ecommerce.auth.service.util.AuthErrorCode;
+import org.ecommerce.utility.security.config.JWTPropertiesConfig;
 import org.ecommerce.utility.security.constants.JwtClaimConstants;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.ecommerce.utility.security.service.JwtTokenValidatorService;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,6 +34,7 @@ public class TokenServiceImpl implements TokenService {
     private final JwtTokenValidatorService jwtTokenValidator;
     private final RefreshTokenRepository tokenRepository;
     private final UserCredentialRepository credentialRepository;
+    private final JWTPropertiesConfig propertiesConfig;
 
     @Override
     public String generateAccessToken(AuthenticatedUser user) {
@@ -119,7 +122,8 @@ public class TokenServiceImpl implements TokenService {
         RefreshTokenEntity refreshTokenEntity = new RefreshTokenEntity();
         refreshTokenEntity.setUserAccountId(user.getUserAccountId());
         refreshTokenEntity.setToken(jwtTokenGenerator.generateRefreshToken(user));
-        refreshTokenEntity.setExpiredAt(LocalDateTime.now().plusDays(7)); // Set expiration to 7 days from now
+        refreshTokenEntity.setExpiredAt(LocalDateTime.now()
+                .plus(Duration.ofMillis(propertiesConfig.getRefreshExpiration()))); // Set expiration to 7 days from now
         // just fetch reference it won't fire query
         UserCredentialEntity reference = credentialRepository.getReferenceById(user.getId());
         refreshTokenEntity.setUserCredential(reference);
