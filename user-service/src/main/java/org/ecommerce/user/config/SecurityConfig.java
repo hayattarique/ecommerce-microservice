@@ -10,6 +10,7 @@ import org.ecommerce.utility.commons.util.ErrorResponse;
 import org.ecommerce.utility.security.config.JWTPropertiesConfig;
 import org.ecommerce.utility.security.exception.SecurityErrorCode;
 import org.ecommerce.utility.security.filter.JWTFilter;
+import org.ecommerce.utility.security.filter.JwtAccessDeniedHandler;
 import org.ecommerce.utility.security.filter.JwtAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,8 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final ObjectMapper objectMapper;
     private final JWTPropertiesConfig jwtProperties;
+    private final JwtAccessDeniedHandler accessDeniedHandler;
+
     // "/actuator/health/**" is open so the Jenkins pipeline can poll it after a
     // deploy without holding a JWT. Only the health endpoint is exposed
     // (management.endpoints.web.exposure.include), so nothing else is reachable.
@@ -61,7 +64,9 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(handler ->
-                        handler.authenticationEntryPoint(authenticationEntryPoint))
+                        handler.authenticationEntryPoint(authenticationEntryPoint)
+                                .accessDeniedHandler(accessDeniedHandler)
+                )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )

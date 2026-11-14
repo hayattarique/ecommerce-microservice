@@ -3,6 +3,7 @@ package org.ecommerce.utility;
 import io.jsonwebtoken.security.Keys;
 import org.ecommerce.utility.security.config.JWTPropertiesConfig;
 import org.ecommerce.utility.security.filter.JWTFilter;
+import org.ecommerce.utility.security.filter.JwtAccessDeniedHandler;
 import org.ecommerce.utility.security.filter.JwtAuthenticationEntryPoint;
 import org.ecommerce.utility.security.service.JwtClaimExtractorService;
 import org.ecommerce.utility.security.service.JwtTokenValidatorService;
@@ -17,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.SecretKey;
@@ -73,5 +75,10 @@ public class SecurityAutoConfig {
             throw new UsernameNotFoundException(
                     "No local user store -- this service authenticates by JWT only");
         };
+    }
+    @Bean
+    @ConditionalOnMissingBean
+    JwtAccessDeniedHandler handler(ObjectMapper objectMapper){
+        return new JwtAccessDeniedHandler(objectMapper);
     }
 }

@@ -1,5 +1,6 @@
 package org.ecommerce.utility.security.filter;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -7,10 +8,12 @@ import lombok.extern.log4j.Log4j2;
 import org.ecommerce.utility.commons.util.ErrorResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -49,4 +52,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             default -> "Authentication failed: " + exception.getMessage();
         };
     }
+
+
 }
