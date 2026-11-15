@@ -5,7 +5,6 @@ import java.util.Set;
 public interface OpenEndpoint {
     Set<String> OPEN_API_ENDPOINT =
             Set.of("/auth-service/api/v1/auth/login",
-                    "/auth-service/api/v1/auth/refresh-token",
                     "/auth-service/api/v1/auth/register",
                     // OpenAPI docs of each service, fetched by the gateway Swagger UI
                     "/auth-service/v3/api-docs",
