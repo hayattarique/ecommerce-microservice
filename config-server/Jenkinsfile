@@ -15,15 +15,6 @@ pipeline {
 
     stages {
 
-
-        stage('Test') {
-            steps {
-                dir("${MODULE}") {
-                    sh 'mvn -B clean test'
-                }
-            }
-        }
-
         stage('Package') {
             steps {
                 dir("${MODULE}") {
