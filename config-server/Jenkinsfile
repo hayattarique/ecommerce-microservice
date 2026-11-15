@@ -10,7 +10,7 @@ pipeline {
     environment {
         MODULE   = 'config-server'
         APP_PORT = '8888'
-        PROFILE  = 'native'
+        PROFILE  = 'dev'
     }
 
     stages {
@@ -44,15 +44,23 @@ pipeline {
             }
         }
 
-        stage('Deploy jar') {
-            steps {
-                sh '''
-                    JENKINS_NODE_COOKIE=dontKillMe nohup java -jar $WORKSPACE/$MODULE/target/*.jar --spring.profiles.active=$PROFILE --server.port=$APP_PORT > /tmp/$MODULE.log 2>&1 &
-                    sleep 5
-                    tail -n 20 /tmp/$MODULE.log
-                '''
-            }
-        }
+       stage('Deploy jar') {
+           steps {
+               withCredentials([usernamePassword(
+                   credentialsId: 'CONFIG_ACCESS_TOKEN',
+                   usernameVariable: 'GIT_USER',
+                   passwordVariable: 'GIT_PASSWORD'
+               )]) {
+                   sh '''
+                       JENKINS_NODE_COOKIE=dontKillMe nohup java -jar $WORKSPACE/$MODULE/target/*.jar \
+                           --spring.profiles.active=$PROFILE \
+                           --server.port=$APP_PORT > /tmp/$MODULE.log 2>&1 &
+                       sleep 5
+                       tail -n 20 /tmp/$MODULE.log
+                   '''
+               }
+           }
+       }
 
 
         stage('Health check') {
