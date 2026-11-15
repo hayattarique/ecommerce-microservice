@@ -9,7 +9,7 @@ versioned, reviewed, and diffed like any other source file.
 | Pipeline | What it deploys | Port | Profile |
 |---|---|---|---|
 | `discovery-server` | Eureka registry | 8761 | `dev` |
-| `config-server` | Spring Cloud Config | 8888 | `native` |
+| `config-server` | Spring Cloud Config (Git backend) | 8888 | `dev` |
 | `auth-service` | Credentials, JWT issuance | 9091 | `dev` |
 | `user-service` | Profiles, roles, permissions | 9092 | `dev` |
 | `gateway` | Reactive edge | 9999 | `dev` |
@@ -125,6 +125,11 @@ flowchart LR
 
 Each job also sets `disableConcurrentBuilds()` (two deploys of the same service must never race for
 the same port) and `buildDiscarder` (keeps the last 15 builds).
+
+**config-server differs in two ways (work in progress):** it has no **Test** stage, and its
+**Deploy jar** runs inside `withCredentials` with the Jenkins credential `CONFIG_ACCESS_TOKEN`
+(username + GitHub token). The pipeline exposes them as `GIT_USER` and `GIT_PASSWORD`, which
+`application-dev.properties` reads to clone `ecommerce-config-repo`.
 
 ## Deploys are gated on health, not on a sleep
 

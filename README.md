@@ -80,7 +80,8 @@ flowchart LR
 
 **Reading the diagram:** solid lines run today; dashed lines and boxes are scaffolded or in progress.
 Not drawn, to keep it readable: every service registers with **Eureka** (`discovery-server`, :8761)
-and exports traces to **Jaeger** (:16686).
+and exports traces to **Jaeger** (:16686); `user-service` loads its properties from the
+**config server** (:8888) at startup.
 
 **Key decisions**
 
@@ -116,7 +117,7 @@ and exports traces to **Jaeger** (:16686).
 | `utility-service` | — | Shared library: security auto-configuration, error contract, response envelope | ✅ |
 | `product-service` | 9093 | Product catalogue | 🧱 Scaffolded |
 | `ai-service` | 9094 | AI assistant — LangChain4j, tools, agents | 🚧 In progress |
-| `config-server` | 8080 | Spring Cloud Config | 🧱 Scaffolded |
+| `config-server` | 8888 | Central configuration — serves each service's properties from the Git repo [`ecommerce-config-repo`](https://github.com/hayattarique/ecommerce-config-repo) (`dev` branch); `user-service` already loads from it | 🚧 In progress |
 
 ---
 
@@ -158,6 +159,7 @@ and exports traces to **Jaeger** (:16686).
 |---|---|
 | Language & framework | Java 21 · Spring Boot 4.1.0 · Spring Cloud 2025.1.2 |
 | Edge & discovery | Spring Cloud Gateway (WebFlux) · Netflix Eureka · Spring Cloud LoadBalancer |
+| Configuration | Spring Cloud Config Server (Git backend) |
 | Security | Spring Security · JJWT 0.13.0 · BCrypt |
 | Data | PostgreSQL · Spring Data JPA / Hibernate · Flyway 12.4.0 |
 | Mapping & docs | MapStruct 1.6.3 · Lombok · springdoc OpenAPI 3.0.2 |
@@ -184,24 +186,46 @@ psql -U postgres -c 'CREATE DATABASE auth_service;' -c 'CREATE DATABASE user_ser
 mvn -f ecommerce-parent/pom.xml clean install
 ```
 
-`discovery-server` is built on its own:
+`discovery-server` and `config-server` are built on their own:
 
 ```bash
 mvn -f discovery-server/pom.xml clean package
 ```
 
-**3. Run the services in this order** — each one with `mvn spring-boot:run` from its folder. The
-`local` profile (the default) points at `localhost:5432`.
+```bash
+mvn -f config-server/pom.xml clean package
+```
+
+**3. Set the local profile and the config-repo token.** Every `application.properties` defaults to
+`dev`; the `local` profile points at `localhost:5432`. The config server clones the private
+`ecommerce-config-repo` over HTTPS, so it needs a GitHub token with read access to that repo.
+
+```bash
+export SPRING_PROFILES_ACTIVE=local
+```
+
+```bash
+export GIT_ACCESS_TOKEN=<github-token-with-read-access>
+```
+
+**4. Run the services in this order** — each one with `mvn spring-boot:run` from its folder.
 
 | # | Service | Port | Why this order |
 |---|---|---|---|
 | 1 | `discovery-server` | 8761 | Everything else registers here |
-| 2 | `user-service` | 9092 | `auth-service` calls it during login |
-| 3 | `auth-service` | 9091 | |
-| 4 | `gateway` | 9999 | Last, so routes resolve immediately |
-| 5 | `ai-service` *(optional)* | 9094 | Needs `export OPEN_AI_KEY=sk-...` first |
+| 2 | `config-server` | 8888 | `user-service` will not start without it (it imports `configserver:` with no `optional:`) |
+| 3 | `user-service` | 9092 | `auth-service` calls it during login |
+| 4 | `auth-service` | 9091 | |
+| 5 | `gateway` | 9999 | Last, so routes resolve immediately |
+| 6 | `ai-service` *(optional)* | 9094 | Needs `export OPEN_AI_KEY=sk-...` first |
 
-**4. Try it**
+Check the config server before starting `user-service`:
+
+```bash
+curl http://localhost:8888/USER-SERVICE/local
+```
+
+**5. Try it**
 
 ```bash
 curl -X POST http://localhost:9091/api/v1/auth/register -H "Content-Type: application/json" -d '{"email":"jane@example.com","firstName":"Jane","lastName":"Doe","displayName":"Jane","mobile":"9876543210","password":"Password123","confirmPassword":"Password123","gender":"FEMALE","dateOfBirth":"1990-01-15"}'
@@ -221,7 +245,7 @@ curl -X POST http://localhost:9091/api/v1/auth/login -H "Content-Type: applicati
 
 Swagger UI: http://localhost:9091/swagger-ui.html · http://localhost:9092/swagger-ui.html
 
-**5. See the trace (optional)**
+**6. See the trace (optional)**
 
 ```bash
 docker run -d --name jaeger -p 16686:16686 -p 4318:4318 jaegertracing/jaeger:2.20.0
@@ -269,7 +293,7 @@ ecommerce-microservice/
 ├── user-service/        Profiles, roles, permissions
 ├── product-service/     Product catalogue (scaffolded)
 ├── ai-service/          AI assistant — LangChain4j
-├── config-server/       Spring Cloud Config (scaffolded)
+├── config-server/       Spring Cloud Config, Git-backed (in progress)
 └── docs/                Deep-dive documentation
 ```
 
@@ -320,7 +344,8 @@ over service APIs · ⬜ specialist agents + a router agent · ⬜ per-user conv
 ⬜ gateway route · ⬜ RAG over the product catalogue · ⬜ guardrails and usage limits
 
 **Platform hardening** — ✅ Jenkins CI/CD · ✅ health-gated deploys · ✅ ShedLock scheduling ·
-⬜ integration tests with Testcontainers · ⬜ externalised secrets + Config Server ·
+⬜ integration tests with Testcontainers · 🚧 Config Server (Git backend; `user-service` connected,
+the other services next) · ⬜ secrets in AWS Secrets Manager ·
 ⬜ Resilience4j · ⬜ gateway rate limiting · ⬜ Docker Compose · ⬜ zero-downtime deploys
 
 **Business services** — 🧱 product · ⬜ category & inventory · ⬜ cart, order, payment · ⬜ notification
