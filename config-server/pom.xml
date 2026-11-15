@@ -13,19 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>config-server</name>
     <description>config-server</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+
     <properties>
         <java.version>21</java.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
@@ -59,12 +47,11 @@
             <scope>test</scope>
         </dependency>
 
-        <!--spring-cloud aws secret manager-->
         <dependency>
             <groupId>io.awspring.cloud</groupId>
-            <artifactId>spring-cloud-starter-aws-secrets-manager-config</artifactId>
-            <scope>compile</scope>
+            <artifactId>spring-cloud-aws-starter-secrets-manager</artifactId>
         </dependency>
+
 
     </dependencies>
     <dependencyManagement>

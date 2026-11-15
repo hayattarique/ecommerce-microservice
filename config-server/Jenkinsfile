@@ -10,7 +10,7 @@ pipeline {
     environment {
         MODULE   = 'config-server'
         APP_PORT = '8888'
-        PROFILE  = 'native'
+        PROFILE  = 'dev'
     }
 
     stages {
