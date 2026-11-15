@@ -51,6 +51,11 @@ pipeline {
                    usernameVariable: 'GIT_USER',
                    passwordVariable: 'GIT_PASSWORD'
                )]) {
+
+               sh '''
+                 echo "GIT_USER = $GIT_USER"
+                 echo "GIT_PASSWORD length = ${#GIT_PASSWORD}"
+               '''
                    sh '''
                        JENKINS_NODE_COOKIE=dontKillMe nohup java -jar $WORKSPACE/$MODULE/target/*.jar \
                            --spring.profiles.active=$PROFILE \
