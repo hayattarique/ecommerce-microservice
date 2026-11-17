@@ -5,7 +5,7 @@ package org.ecommerce.utility.security.constants;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class JwtClaimConstants {
+public class AppConstant {
 
     public static final String EMAIL = "email";
 
@@ -18,4 +18,6 @@ public class JwtClaimConstants {
     public static final String TOKEN_TYPE = "tokenType";
 
     public static final String USER_ACCOUNT_ID_HEADER = "X-Forward-User-Account-Id";
+
+    public static final String TRACE_ID="traceId";
 }

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
-import static org.ecommerce.utility.security.constants.JwtClaimConstants.*;
+import static org.ecommerce.utility.security.constants.AppConstant.*;
 
 @Component
 @RequiredArgsConstructor

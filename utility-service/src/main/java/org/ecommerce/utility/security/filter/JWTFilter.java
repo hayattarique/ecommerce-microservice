@@ -10,7 +10,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.ecommerce.utility.commons.constants.SecurityConstants;
-import org.ecommerce.utility.security.constants.JwtClaimConstants;
+import org.ecommerce.utility.security.constants.AppConstant;
 import org.ecommerce.utility.security.exception.JwtException;
 import org.ecommerce.utility.security.exception.SecurityErrorCode;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
@@ -58,15 +58,15 @@ public class JWTFilter extends OncePerRequestFilter {
                 reject(request, response, SecurityErrorCode.INVALID_TOKEN);
                 return;
             }
-            if (TokenType.REFRESH_TOKEN.name().equals(claims.get(JwtClaimConstants.TOKEN_TYPE, String.class))) {
+            if (TokenType.REFRESH_TOKEN.name().equals(claims.get(AppConstant.TOKEN_TYPE, String.class))) {
                 reject(request, response, SecurityErrorCode.INVALID_TOKEN_TYPE);
                 return;
             }
-            String userAccountId = request.getHeader(JwtClaimConstants.USER_ACCOUNT_ID_HEADER);
+            String userAccountId = request.getHeader(AppConstant.USER_ACCOUNT_ID_HEADER);
 
             // step 3 extract userId from claims and set it in MDC for logging
             if (userAccountId!= null) {
-                MDC.put(JwtClaimConstants.USER_ACCOUNT_ID, userAccountId);
+                MDC.put(AppConstant.USER_ACCOUNT_ID, userAccountId);
             }
             AuthenticatedUser authenticatedUser = jwtClaimExtractor.extractAuthenticatedUser(claims);
             UsernamePasswordAuthenticationToken authentication =

@@ -3,10 +3,8 @@ package org.ecommerce.auth.service.service.impl;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.catalina.util.StringUtil;
 import org.ecommerce.auth.service.dto.AuthenticationDto;
 import org.ecommerce.auth.service.dto.AuthenticationRequest;
-import org.ecommerce.auth.service.dto.RefreshTokenRequest;
 import org.ecommerce.auth.service.exception.AuthenticationException;
 import org.ecommerce.auth.service.integration.adapter.UserAdapter;
 import org.ecommerce.auth.service.integration.dto.UserDto;
@@ -22,8 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import static org.ecommerce.utility.security.constants.JwtClaimConstants.EMAIL;
-import static org.ecommerce.utility.security.constants.JwtClaimConstants.USER_ACCOUNT_ID;
+import static org.ecommerce.utility.security.constants.AppConstant.EMAIL;
+import static org.ecommerce.utility.security.constants.AppConstant.USER_ACCOUNT_ID;
 
 @Service
 @RequiredArgsConstructor

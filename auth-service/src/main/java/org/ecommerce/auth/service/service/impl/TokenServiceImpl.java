@@ -12,7 +12,7 @@ import org.ecommerce.auth.service.repositories.UserCredentialRepository;
 import org.ecommerce.auth.service.service.TokenService;
 import org.ecommerce.auth.service.util.AuthErrorCode;
 import org.ecommerce.utility.security.config.JWTPropertiesConfig;
-import org.ecommerce.utility.security.constants.JwtClaimConstants;
+import org.ecommerce.utility.security.constants.AppConstant;
 import org.ecommerce.utility.security.model.AuthenticatedUser;
 import org.ecommerce.utility.security.service.JwtTokenValidatorService;
 import org.ecommerce.utility.security.utils.TokenType;
@@ -58,7 +58,7 @@ public class TokenServiceImpl implements TokenService {
                 .orElseThrow(() -> new AuthenticationException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
         Claims claims = jwtTokenValidator.validateTokenAndGetClaims(token);
-        TokenType tokenType = TokenType.valueOf(claims.get(JwtClaimConstants.TOKEN_TYPE, String.class));
+        TokenType tokenType = TokenType.valueOf(claims.get(AppConstant.TOKEN_TYPE, String.class));
 
         return tokenType == TokenType.REFRESH_TOKEN;
     }
