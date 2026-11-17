@@ -43,7 +43,7 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         String endpoint = request.getURI().getPath();
 
         // public endpoints — login, register, refresh
-        if (OpenEndpoint.OPEN_API_ENDPOINT.stream().anyMatch(endpoint::startsWith)) {
+        if (OpenEndpoint.OPEN_API_ENDPOINT.contains(endpoint) || OpenEndpoint.COOKIE_API_ENDPOINT.contains(endpoint)) {
             return chain.filter(exchange);
         }
 
